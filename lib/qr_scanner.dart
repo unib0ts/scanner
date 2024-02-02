@@ -102,6 +102,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late Animation<double> _animation;
   late AdManagerBannerAd bannerBottomAd;
   late AdManagerBannerAd bannerAdForHistory;
+  late AdManagerBannerAd bannerAdForLauncher;
 
 
   void loadBottomBannerAd() {
@@ -158,6 +159,32 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     )..load();
   }
 
+  void loadBottomBannerAdLauncher() {
+    bannerAdForLauncher = AdManagerBannerAd(
+      adUnitId: '/21928950349/com.example.qr_scanner_300x250',
+      request: const AdManagerAdRequest(),
+      sizes: [AdSize.mediumRectangle],
+      listener: AdManagerBannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          setState(() {
+            //isAdLoaded = true;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          // Dispose the ad here to free resources.
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    )..load();
+  }
 
 
   // final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
@@ -204,6 +231,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   void initState() {
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
+    loadBottomBannerAdLauncher();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -997,6 +1025,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 dialogOpen = false;
                                 urlTimeStamp = false;
                                 historyItemTapped = false;
+                                bannerAdForLauncher.dispose();
+                                loadBottomBannerAdLauncher();
                               });
                               Navigator.of(context).pop();
                             },
@@ -1012,9 +1042,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       flex:3,
                       child: Text(jsonResult['Web Url'] ?? "")),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher),
                     ),
                   ),
                   Visibility(
@@ -1118,6 +1149,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 dialogOpen = false;
                                 wifiTimeStamp = false;
                                 historyItemTapped = false;
+                                bannerAdForLauncher.dispose();
+                                loadBottomBannerAdLauncher();
                               });
                               Navigator.of(context).pop();
                             },
@@ -1159,6 +1192,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex: 3,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher,),
                     ),
                   ),
                   Visibility(
@@ -1278,6 +1312,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               dialogOpen = false;
                               geoTimeStamp = false;
                               historyItemTapped = false;
+                              bannerAdForLauncher.dispose();
+                              loadBottomBannerAdLauncher();
                             });
                             Navigator.of(context).pop();
                           },
@@ -1293,6 +1329,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex: 3,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher,),
                     ),
                   ),
                   Visibility(
@@ -1398,6 +1435,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               dialogOpen = false;
                               barCodeTimeStamp = false;
                               historyItemTapped = false;
+                              bannerAdForLauncher.dispose();
+                              loadBottomBannerAdLauncher();
                             });
                             Navigator.of(context).pop();
                           },
@@ -1411,9 +1450,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text(jsonResult['BarCodeData'])
                   ),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher),
                     ),
                   ),
                   Visibility(
@@ -1497,6 +1537,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 dialogOpen = false;
                                 calendarTimeStamp = false;
                                 historyItemTapped = false;
+                                bannerAdForLauncher.dispose();
+                                loadBottomBannerAdLauncher();
                               });
                               Navigator.of(context).pop();
                             },
@@ -1651,6 +1693,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                   dialogOpen = false;
                                   vCardTimeStamp = false;
                                   historyItemTapped = false;
+                                  bannerAdForLauncher.dispose();
+                                  loadBottomBannerAdLauncher();
                                 });
                                 Navigator.of(context).pop();
                               },
@@ -1702,10 +1746,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       ),
                     ),
                   ),
-                  const Flexible(flex: 4,
+                  Flexible(flex: 5,
                       child: SizedBox(
-                        width: 300,
                         height: 250,
+                        child: AdWidget(ad: bannerAdForLauncher),
                       )),
                   Flexible(
                     flex: 1,
@@ -1854,6 +1898,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             onTap: () {
                               setState(() {
                                 dialogOpen = false;
+                                bannerAdForLauncher.dispose();
+                                loadBottomBannerAdLauncher();
                               });
                               Navigator.of(context).pop();
                             },
@@ -1869,6 +1915,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex: 3,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher,),
                     ),
                   ),
                   Visibility(
@@ -1971,6 +2018,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             onTap: () {
                               setState(() {
                                 dialogOpen = false;
+                                bannerAdForLauncher.dispose();
+                                loadBottomBannerAdLauncher();
                               });
                               Navigator.of(context).pop();
                             },
@@ -1983,9 +2032,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       flex:3,
                       child: Text(jsonResult['Blank'] ?? "")),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
+                      child: AdWidget(ad: bannerAdForLauncher),
                     ),
                   ),
                   Visibility(
@@ -2276,7 +2326,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       ],
                     )),
                 Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: SizedBox(
                     height: (MediaQuery.of(context).size.height * 3/4)/3,
                     child: AdWidget(ad: bannerAdForHistory),
@@ -2415,7 +2465,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex:3,
                     child: Text('Geo : ${url['latitude'] ?? ''} , ${url['longitude'] ?? ''}')),
                 Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: SizedBox(
                     height: (MediaQuery.of(context).size.height * 3/4)/3,
                     child: AdWidget(ad: bannerAdForHistory),
@@ -2539,7 +2589,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Text(url['BarCodeData'])
                 ),
                 Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: SizedBox(
                     height: (MediaQuery.of(context).size.height * 3/4)/3,
                     child: AdWidget(ad: bannerAdForHistory),
@@ -2838,7 +2888,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     ),
                   ),
                 ),
-                Flexible(flex: 3,
+                Flexible(flex: 5,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: SizedBox(
@@ -3006,7 +3056,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       flex:3,
                       child: Text(url['URL'] ?? "")),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 3/4)/3,
                       child: AdWidget(ad: bannerAdForHistory),
@@ -3130,19 +3180,51 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex:3,
                     child: Text(url['Blank'])),
                 Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: SizedBox(
                     height: (MediaQuery.of(context).size.height * 3/4)/3,
                     child: AdWidget(ad: bannerAdForHistory,),
                   ),
                 ),
-                const Expanded(
-                  flex: 1,
-                  child: ElevatedButton(onPressed:null, child: Text('Copy')),
-                ),
-                const Flexible(
+                Flexible(
                     flex: 1,
-                    child: ElevatedButton(onPressed:null, child: Text('Share')))
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color:  const Color(0xff71717A),
+                        borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                      ),
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              elevation: 0, // Set elevation to 0 to remove it
+                              backgroundColor: Colors.transparent
+                          ),
+                          onPressed:() {
+                            copyToClipboard(url['Blank']);
+                          }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                    ),),
+                SizedBox(height: 10,),
+                Expanded(
+                  flex: 1,
+                  child:
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                      border: Border.all(
+                        color: Colors.black, // Set border color
+                        width: 2.0, // Set border width
+                      ),
+                    ),
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                        ),
+                        onPressed:() {
+                          callIntentText(url['Blank'], url['type']);
+                        }, child: const Text('Share',style:TextStyle(color: Colors.black))),
+                  )),
               ],
             ),
           ),
