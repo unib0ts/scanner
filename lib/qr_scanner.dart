@@ -104,7 +104,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late AdManagerBannerAd bannerAdForHistory;
   late AdManagerBannerAd bannerAdForLauncher;
 
-
   void loadBottomBannerAd() {
     bannerBottomAd = AdManagerBannerAd(
       adUnitId: '/21928950349/com.example.qr_scanner_320x50',
@@ -185,7 +184,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       ),
     )..load();
   }
-
 
   // final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
 
@@ -3448,6 +3446,7 @@ class _SettingsAlertState extends State<SettingsAlert> {
   final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
   bool isSwitchedVibrate = true;
   bool isSwitchedOpenURL = false;
+  late AdManagerBannerAd bannerAdForSettings;
 
   getSwitchValues() async {
     isSwitchedVibrate = await prefsHelper.getVibrateData();
@@ -3458,10 +3457,45 @@ class _SettingsAlertState extends State<SettingsAlert> {
   @override
   void initState() {
     getSwitchValues();
+    loadSettingsBannerAd();
     super.initState();
   }
 
-  @override
+void loadSettingsBannerAd() {
+  bannerAdForSettings = AdManagerBannerAd(
+    adUnitId: '/21928950349/com.example.qr_scanner_300x250',
+    request: const AdManagerAdRequest(),
+    sizes: [AdSize.mediumRectangle],
+    listener: AdManagerBannerAdListener(
+      // Called when an ad is successfully received.
+      onAdLoaded: (ad) {
+        setState(() {
+          //isAdLoaded = true;
+        });
+      },
+      // Called when an ad request failed.
+      onAdFailedToLoad: (ad, err) {
+        // Dispose the ad here to free resources.
+        ad.dispose();
+      },
+      // Called when an ad opens an overlay that covers the screen.
+      onAdOpened: (Ad ad) {},
+      // Called when an ad removes an overlay that covers the screen.
+      onAdClosed: (Ad ad) {},
+      // Called when an impression occurs on the ad.
+      onAdImpression: (Ad ad) {},
+    ),
+  )..load();
+}
+
+@override
+  void dispose() {
+    bannerAdForSettings.dispose();
+    super.dispose();
+  }
+
+
+@override
   Widget build(BuildContext context) {
 
     void toggleSwitchVibrate(bool value) async {
@@ -3525,7 +3559,7 @@ class _SettingsAlertState extends State<SettingsAlert> {
               ],
             ),
             Expanded(
-              flex: 6,
+              flex: 7,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(5,50,0,0),
                 child: Column(
@@ -3613,12 +3647,19 @@ class _SettingsAlertState extends State<SettingsAlert> {
                             },
                             child: const Text('Clear History',style: TextStyle(color: Color(0xFFEF4444)),)),
                       ),
-                    )
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: SizedBox(
+                        height: 250,
+                        child: AdWidget(ad: bannerAdForSettings),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            Expanded(
+            /*Expanded(
               flex: 1,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -3638,7 +3679,7 @@ class _SettingsAlertState extends State<SettingsAlert> {
                       child: const Text('Rate Us',style: TextStyle(color: Color(0xFF22C55E)),)),
                 ),
               ),
-            ),
+            ),*/
             Expanded(
               flex: 1,
               child: Padding(
