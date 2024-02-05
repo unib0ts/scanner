@@ -15,7 +15,7 @@ class SharedPreferencesHelper {
 
   Future<bool> getOpenURLAutoData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_openURLAutoKey) ?? true;
+    return prefs.getBool(_openURLAutoKey) ?? false;
   }
 
   Future<void> saveVibrateData(bool data) async {

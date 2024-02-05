@@ -41,6 +41,8 @@ dependencies:
   wifi_iot: ^0.3.18
   fluttertoast: ^8.0.7
   introduction_screen: ^3.1.12
+  firebase_core: ^2.19.0
+  firebase_database: ^10.3.1
 
 
   # The following adds the Cupertino Icons font to your application.

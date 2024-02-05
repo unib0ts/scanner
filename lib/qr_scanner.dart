@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
+import 'NavigationService.dart';
 import 'SharedPreferencesHelper.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
@@ -103,12 +104,24 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late AdManagerBannerAd bannerBottomAd;
   late AdManagerBannerAd bannerAdForHistory;
   late AdManagerBannerAd bannerAdForLauncher;
+  var heightHistory = "250",
+      heightBottom = "50",
+      heightLauncher = "250",
+      widthHistory = "300",
+      widthLauncher = "300",
+      widthBottom = "320";
+  bool isAdShow = false;
+  bool adPositionHistory = false;
+  bool adPositionLauncher = false;
+  bool adPositionBottom = false;
+  var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "";
+  String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle";
 
   void loadBottomBannerAd() {
     bannerBottomAd = AdManagerBannerAd(
-      adUnitId: '/21928950349/com.example.qr_scanner_320x50',
+      adUnitId: adUnitBottom,
       request: const AdManagerAdRequest(),
-      sizes: [AdSize.banner],
+      sizes: [NavigationService.selectSize(bottomType)],
       listener: AdManagerBannerAdListener(
         // Called when an ad is successfully received.
         onAdLoaded: (ad) {
@@ -133,9 +146,9 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
   void loadBottomBannerAdHistory() {
     bannerAdForHistory = AdManagerBannerAd(
-      adUnitId: '/21928950349/com.example.qr_scanner_300x250',
+      adUnitId: adUnitHistory,
       request: const AdManagerAdRequest(),
-      sizes: [AdSize.mediumRectangle],
+      sizes: [NavigationService.selectSize(historyType)],
       listener: AdManagerBannerAdListener(
         // Called when an ad is successfully received.
         onAdLoaded: (ad) {
@@ -160,9 +173,9 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
   void loadBottomBannerAdLauncher() {
     bannerAdForLauncher = AdManagerBannerAd(
-      adUnitId: '/21928950349/com.example.qr_scanner_300x250',
+      adUnitId: adUnitLauncher,
       request: const AdManagerAdRequest(),
-      sizes: [AdSize.mediumRectangle],
+      sizes: [NavigationService.selectSize(launcherType)],
       listener: AdManagerBannerAdListener(
         // Called when an ad is successfully received.
         onAdLoaded: (ad) {
@@ -230,6 +243,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
     loadBottomBannerAdLauncher();
+    getDataFromFirebase();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -245,6 +259,143 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     _controller.repeat(reverse: true);
     loadJsonDataList();
     super.initState();
+  }
+
+  void getDataFromFirebase() {
+    NavigationService.databaseReference
+        .child('isAdShow')
+        .onValue
+        .listen((event) {
+      final isAd = event.snapshot.value;
+      print("IS_AD" + isAd.toString());
+      setState(() {
+        isAdShow = bool.parse(isAd.toString());
+      });
+    });
+    /* Home Screen */
+    NavigationService.databaseReference
+        .child('home_positions')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        if (position.toString().toLowerCase() == 'bottom') {
+          adPositionBottom = true;
+        } else {
+          adPositionBottom = false;
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('home_sizes')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final size = event.snapshot.value;
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          widthBottom = value[0];
+          heightBottom = value[1];
+        }
+      });
+    });
+
+    NavigationService.databaseReference
+        .child('home_unit_id')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final adUnitId = event.snapshot.value;
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitBottom = value[0];
+          bottomType = value[1];
+        }
+        loadBottomBannerAd();
+      });
+    });
+    /* History Screen */
+    NavigationService.databaseReference
+        .child('history_dialog_positions')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        if (position.toString().toLowerCase() == 'bottom') {
+          adPositionHistory = true;
+        } else {
+          adPositionHistory = false;
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('history_dialog_sizes')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final size = event.snapshot.value;
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          widthHistory = value[0];
+          heightHistory = value[1];
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('history_dialog_unit_id')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final adUnitId = event.snapshot.value;
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitHistory = value[0];
+          historyType = value[1];
+        }
+        loadBottomBannerAdHistory();
+      });
+    });
+    /* Home Screen */
+    NavigationService.databaseReference
+        .child('normal_dialog_positions')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        if (position.toString().toLowerCase() == 'bottom') {
+          adPositionLauncher = true;
+        } else {
+          adPositionLauncher = false;
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('normal_dialog_sizes')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final size = event.snapshot.value;
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          widthLauncher = value[0];
+          heightLauncher = value[1];
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('normal_dialog_unit_id')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final adUnitId = event.snapshot.value;
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitLauncher = value[0];
+          launcherType = value[1];
+        }
+        loadBottomBannerAdLauncher();
+      });
+    });
   }
 
   Future<void> vibrate() async {
@@ -421,13 +572,13 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   ),
                     Align(
                       alignment: Alignment.bottomCenter,
-                      child: Container(
+                      child: isAdShow ? adPositionBottom ? Container(
                         /*margin:EdgeInsets.only(top:10),*/
-                        width: double.infinity,
-                        height: 50,
+                        width: double.parse(widthBottom),
+                        height: double.parse(heightBottom),
                         child: AdWidget(
                           ad: bannerBottomAd,
-                        ),),
+                        ),) : const SizedBox() : SizedBox(),
                     )
                 ],
               ),
@@ -1041,10 +1192,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text(jsonResult['Web Url'] ?? "")),
                   Expanded(
                     flex: 5,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
                       child: AdWidget(ad: bannerAdForLauncher),
-                    ),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: jsonResult['Web Url'] != null && jsonResult['Web Url'] != "",
@@ -1188,10 +1340,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       )),
                   Expanded(
                     flex: 3,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
-                      child: AdWidget(ad: bannerAdForLauncher,),
-                    ),
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
+                      child: AdWidget(ad: bannerAdForLauncher),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: (jsonResult['ssid'] != null && jsonResult['ssid'] != '')
@@ -1325,10 +1478,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text('Geo : ${jsonResult['latitude'] ?? ''} , ${jsonResult['longitude'] ?? ''}')),
                   Expanded(
                     flex: 3,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
-                      child: AdWidget(ad: bannerAdForLauncher,),
-                    ),
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
+                      child: AdWidget(ad: bannerAdForLauncher),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: (jsonResult['latitude'] != null && jsonResult['latitude'] != '')
@@ -1449,10 +1603,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   ),
                   Expanded(
                     flex: 5,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
                       child: AdWidget(ad: bannerAdForLauncher),
-                    ),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: jsonResult['BarCodeData'] != null && jsonResult['BarCodeData'] != '',
@@ -1745,10 +1900,12 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     ),
                   ),
                   Flexible(flex: 5,
-                      child: SizedBox(
-                        height: 250,
-                        child: AdWidget(ad: bannerAdForLauncher),
-                      )),
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
+                      child: AdWidget(ad: bannerAdForLauncher),
+                    ) : const SizedBox() : const SizedBox(),
+                  ),
                   Flexible(
                     flex: 1,
                     child: Row(
@@ -1911,10 +2068,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text(jsonResult['URL'] ?? "")),
                   Expanded(
                     flex: 3,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
-                      child: AdWidget(ad: bannerAdForLauncher,),
-                    ),
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
+                      child: AdWidget(ad: bannerAdForLauncher),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: jsonResult['URL'] != null && jsonResult['URL'] != "",
@@ -2031,10 +2189,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text(jsonResult['Blank'] ?? "")),
                   Expanded(
                     flex: 5,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
                       child: AdWidget(ad: bannerAdForLauncher),
-                    ),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: jsonResult['Blank'] != null && jsonResult['Blank'] != "",
@@ -2177,10 +2336,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                 ),
                 Expanded(
                   flex: 5,
-                  child: SizedBox(
-                    height: 250,
+                  child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
                     child: AdWidget(ad: bannerAdForHistory),
-                  ),
+                  ) : const SizedBox() : const SizedBox(),
                 ),
                 Visibility(
                   visible: url['Web Url'] != null && url['Web Url'] != "",
@@ -2325,10 +2485,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     )),
                 Expanded(
                   flex: 5,
-                  child: SizedBox(
-                    height: (MediaQuery.of(context).size.height * 3/4)/3,
+                  child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
                     child: AdWidget(ad: bannerAdForHistory),
-                  ),
+                  ) : const SizedBox() : const SizedBox(),
                 ),
                 Visibility(
                   visible: (url['ssid'] != null && url['ssid'] != '')
@@ -2464,10 +2625,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Text('Geo : ${url['latitude'] ?? ''} , ${url['longitude'] ?? ''}')),
                 Expanded(
                   flex: 5,
-                  child: SizedBox(
-                    height: (MediaQuery.of(context).size.height * 3/4)/3,
+                  child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
                     child: AdWidget(ad: bannerAdForHistory),
-                  ),
+                  ) : const SizedBox() : const SizedBox(),
                 ),
                 Visibility(
                   visible: (url['latitude'] != null && url['latitude'] != '')
@@ -2588,10 +2750,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                 ),
                 Expanded(
                   flex: 5,
-                  child: SizedBox(
-                    height: (MediaQuery.of(context).size.height * 3/4)/3,
+                  child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
                     child: AdWidget(ad: bannerAdForHistory),
-                  ),
+                  ) : const SizedBox() : const SizedBox(),
                 ),
                 Visibility(
                   visible: url['BarCodeData'] != null && url['BarCodeData'] != '',
@@ -2889,11 +3052,13 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                 Flexible(flex: 5,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SizedBox(
-                        height: 250,
+                      child: isAdShow ? adPositionHistory ? SizedBox(
+                        height: double.parse(heightHistory),
+                        width: double.parse(widthHistory),
                         child: AdWidget(ad: bannerAdForHistory),
-                      ),
-                    )),
+                      ): const SizedBox() : const SizedBox(),
+                    ),
+                ),
                 Flexible(
                   flex: 1,
                   child: Row(
@@ -3055,10 +3220,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Text(url['URL'] ?? "")),
                   Expanded(
                     flex: 5,
-                    child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 3/4)/3,
+                    child: isAdShow ? adPositionHistory ? SizedBox(
+                      height: double.parse(heightHistory),
+                      width: double.parse(widthHistory),
                       child: AdWidget(ad: bannerAdForHistory),
-                    ),
+                    ) : const SizedBox() : const SizedBox(),
                   ),
                   Visibility(
                     visible: url['URL'] != null && url['URL'] != "",
@@ -3179,10 +3345,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Text(url['Blank'])),
                 Expanded(
                   flex: 5,
-                  child: SizedBox(
-                    height: (MediaQuery.of(context).size.height * 3/4)/3,
-                    child: AdWidget(ad: bannerAdForHistory,),
-                  ),
+                  child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
+                    child: AdWidget(ad: bannerAdForHistory),
+                  ) : const SizedBox() : const SizedBox(),
                 ),
                 Flexible(
                     flex: 1,
@@ -3431,6 +3598,9 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   @override
   void dispose() {
     controller?.dispose();
+    bannerBottomAd.dispose();
+    bannerAdForLauncher.dispose();
+    bannerAdForHistory.dispose();
     super.dispose();
   }
 }
@@ -3447,6 +3617,12 @@ class _SettingsAlertState extends State<SettingsAlert> {
   bool isSwitchedVibrate = true;
   bool isSwitchedOpenURL = false;
   late AdManagerBannerAd bannerAdForSettings;
+  var heightSettings = "250",
+      widthSettings = "300";
+  bool isAdShow = false;
+  bool adPositionSettings = false;
+  var adUnitSettings = "";
+  String settingsType = "mediumRectangle";
 
   getSwitchValues() async {
     isSwitchedVibrate = await prefsHelper.getVibrateData();
@@ -3458,14 +3634,71 @@ class _SettingsAlertState extends State<SettingsAlert> {
   void initState() {
     getSwitchValues();
     loadSettingsBannerAd();
+    getDataFromFirebaseSettings();
     super.initState();
+  }
+
+
+  void getDataFromFirebaseSettings(){
+    NavigationService.databaseReference
+        .child('isAdShow')
+        .onValue
+        .listen((event) {
+      final isAd = event.snapshot.value;
+      print("IS_AD1" + isAd.toString());
+      setState(() {
+        isAdShow = bool.parse(isAd.toString());
+      });
+    });
+    /* Home Screen */
+    NavigationService.databaseReference
+        .child('setting_positions')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        if (position.toString().toLowerCase() == 'bottom') {
+          adPositionSettings = true;
+        } else {
+          adPositionSettings = false;
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('setting_sizes')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final size = event.snapshot.value;
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          widthSettings = value[0];
+          heightSettings = value[1];
+        }
+      });
+    });
+
+    NavigationService.databaseReference
+        .child('setting_unit_id')
+        .onValue
+        .listen((event) {
+      setState(() {
+        final adUnitId = event.snapshot.value;
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitSettings = value[0];
+          settingsType = value[1];
+        }
+        loadSettingsBannerAd();
+      });
+    });
   }
 
 void loadSettingsBannerAd() {
   bannerAdForSettings = AdManagerBannerAd(
-    adUnitId: '/21928950349/com.example.qr_scanner_300x250',
+    adUnitId: adUnitSettings,
     request: const AdManagerAdRequest(),
-    sizes: [AdSize.mediumRectangle],
+    sizes: [NavigationService.selectSize(settingsType)],
     listener: AdManagerBannerAdListener(
       // Called when an ad is successfully received.
       onAdLoaded: (ad) {
@@ -3650,10 +3883,11 @@ void loadSettingsBannerAd() {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20.0),
-                      child: SizedBox(
-                        height: 250,
+                      child: isAdShow ? adPositionSettings ? SizedBox(
+                        height: double.parse(heightSettings),
+                        width: double.parse(widthSettings),
                         child: AdWidget(ad: bannerAdForSettings),
-                      ),
+                      ) : const SizedBox() : const SizedBox(),
                     ),
                   ],
                 ),
