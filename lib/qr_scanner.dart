@@ -116,6 +116,33 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   bool adPositionBottom = false;
   var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "";
   String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle";
+  AdManagerInterstitialAd? interstitialAd;
+
+
+  void loadInterstitialAd() {
+    AdManagerInterstitialAd.load(
+        adUnitId: NavigationService.getInterstitialAdUnitId(),
+        request: const AdManagerAdRequest(),
+        adLoadCallback: AdManagerInterstitialAdLoadCallback(
+          // Called when an ad is successfully received.
+          onAdLoaded: (ad) {
+            interstitialAd = ad;
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              onAdDismissedFullScreenContent: (ad) {
+                setState(() {});
+                ad.dispose();
+              },
+              onAdFailedToShowFullScreenContent: (ad, error) {
+                ad.dispose();
+              },
+            );
+          },
+          // Called when an ad request failed.
+          onAdFailedToLoad: (LoadAdError error) {
+            debugPrint('AdManagerInterstitialAd failed to load: $error');
+          },
+        ));
+  }
 
   void loadBottomBannerAd() {
     bannerBottomAd = AdManagerBannerAd(
@@ -240,6 +267,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   }
   @override
   void initState() {
+    loadInterstitialAd();
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
     loadBottomBannerAdLauncher();
@@ -290,8 +318,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('home_sizes')
         .onValue
         .listen((event) {
+      final size = event.snapshot.value;
       setState(() {
-        final size = event.snapshot.value;
         final value = size.toString().split('x');
         if (value.length == 2) {
           widthBottom = value[0];
@@ -304,8 +332,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('home_unit_id')
         .onValue
         .listen((event) {
+      final adUnitId = event.snapshot.value;
       setState(() {
-        final adUnitId = event.snapshot.value;
         final value = adUnitId.toString().split('&');
         if (value.length == 2) {
           adUnitBottom = value[0];
@@ -332,8 +360,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('history_dialog_sizes')
         .onValue
         .listen((event) {
+      final size = event.snapshot.value;
       setState(() {
-        final size = event.snapshot.value;
         final value = size.toString().split('x');
         if (value.length == 2) {
           widthHistory = value[0];
@@ -345,8 +373,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('history_dialog_unit_id')
         .onValue
         .listen((event) {
+      final adUnitId = event.snapshot.value;
       setState(() {
-        final adUnitId = event.snapshot.value;
         final value = adUnitId.toString().split('&');
         if (value.length == 2) {
           adUnitHistory = value[0];
@@ -373,8 +401,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('normal_dialog_sizes')
         .onValue
         .listen((event) {
+      final size = event.snapshot.value;
       setState(() {
-        final size = event.snapshot.value;
         final value = size.toString().split('x');
         if (value.length == 2) {
           widthLauncher = value[0];
@@ -386,8 +414,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .child('normal_dialog_unit_id')
         .onValue
         .listen((event) {
+      final adUnitId = event.snapshot.value;
       setState(() {
-        final adUnitId = event.snapshot.value;
         final value = adUnitId.toString().split('&');
         if (value.length == 2) {
           adUnitLauncher = value[0];
@@ -479,6 +507,20 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           )),
                       GestureDetector(
                         onVerticalDragEnd: (details) {
+                          setState(() {
+                            historyItemTapped = true;
+                            NavigationService.count++;
+                            if(NavigationService.getCount() == -1){
+                              NavigationService.count = 0;
+                            }
+                            else if (NavigationService.getCount() == NavigationService.count) {
+                              try {
+                                loadInterstitialAd();
+                              } catch (error) {}
+                              interstitialAd?.show();
+                              NavigationService.count = 0;
+                            }
+                          });
                           // Check if the swipe is upwards
                           if (details.primaryVelocity! < 0) {
                             // Show the bottom sheet
@@ -494,6 +536,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                     offset: Offset(0, -_animation.value),
                                     child: IconButton(
                                       onPressed: () {
+                                        setState(() {
+                                          NavigationService.count++;
+                                          if(NavigationService.getCount() == -1){
+                                            NavigationService.count = 0;
+                                          }
+                                          else if (NavigationService.getCount() == NavigationService.count) {
+                                            try {
+                                              loadInterstitialAd();
+                                            } catch (error) {}
+                                            interstitialAd?.show();
+                                            NavigationService.count = 0;
+                                          }
+                                        });
                                         _showBottomSheet(context);
                                       },
                                       //(){_showBottomSheet(context);},
@@ -504,11 +559,37 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             ),
                             GestureDetector(
                                 onTap: () {
+                                  setState(() {
+                                    NavigationService.count++;
+                                    if(NavigationService.getCount() == -1){
+                                      NavigationService.count = 0;
+                                    }
+                                    else if (NavigationService.getCount() == NavigationService.count) {
+                                      try {
+                                        loadInterstitialAd();
+                                      } catch (error) {}
+                                      interstitialAd?.show();
+                                      NavigationService.count = 0;
+                                    }
+                                  });
                                   _showBottomSheet(context);
                                 },
                                 child: Text('Scan History',style: TextStyle(color: Colors.white),)),
                             GestureDetector(
                                 onTap: () {
+                                  setState(() {
+                                    NavigationService.count++;
+                                    if(NavigationService.getCount() == -1){
+                                      NavigationService.count = 0;
+                                    }
+                                    else if (NavigationService.getCount() == NavigationService.count) {
+                                      try {
+                                        loadInterstitialAd();
+                                      } catch (error) {}
+                                      interstitialAd?.show();
+                                      NavigationService.count = 0;
+                                    }
+                                  });
                                   _showBottomSheet(context);
                                 },
                                 child: Text('Swipe up',style: TextStyle(color: Colors.white,fontSize: 10),))
@@ -521,6 +602,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             context,
                             MaterialPageRoute(
                                 builder: (context) => HomeTest()));*/
+                          setState(() {
+                            NavigationService.count++;
+                            if(NavigationService.getCount() == -1){
+                              NavigationService.count = 0;
+                            }
+                            else if (NavigationService.getCount() == NavigationService.count) {
+                              try {
+                                loadInterstitialAd();
+                              } catch (error) {}
+                              interstitialAd?.show();
+                              NavigationService.count = 0;
+                            }
+                          });
                           _showSettingsDialog('launcher');
                         },
                         child: Padding(
@@ -672,6 +766,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       ),
                       GestureDetector(
                         onTap: (){
+                          setState(() {
+                            NavigationService.count++;
+                            if(NavigationService.getCount() == -1){
+                              NavigationService.count = 0;
+                            }
+                            else if (NavigationService.getCount() == NavigationService.count) {
+                              try {
+                                loadInterstitialAd();
+                              } catch (error) {}
+                              interstitialAd?.show();
+                              NavigationService.count = 0;
+                            }
+                          });
                           _showSettingsDialog('history');
                         },
                         child: Padding(
@@ -701,10 +808,20 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                   onTap:(){
                                     setState(() {
                                       historyItemTapped = true;
+                                      NavigationService.count++;
+                                      if(NavigationService.getCount() == -1){
+                                        NavigationService.count = 0;
+                                      }
+                                      else if (NavigationService.getCount() == NavigationService.count) {
+                                        try {
+                                          loadInterstitialAd();
+                                        } catch (error) {}
+                                        interstitialAd?.show();
+                                        NavigationService.count = 0;
+                                      }
                                     });
                                     print(item);
                                     _showHistoryDialog(context, item, item['type']);
-
                                   },
                                   child: Container(
                                       height: 80,
@@ -1701,7 +1818,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     ),
                   ),
                   Expanded(
-                      flex:5,
+                      flex:2,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -1733,7 +1850,14 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
                         ],
                       )),
-
+                  Expanded(
+                    flex: 5,
+                    child: isAdShow ? adPositionLauncher ? SizedBox(
+                      height: double.parse(heightLauncher),
+                      width: double.parse(widthLauncher),
+                      child: AdWidget(ad: bannerAdForLauncher),
+                    ): const SizedBox() : const SizedBox(),
+                  ),
                   Expanded(
                     flex: 1,
                     child: Row(
@@ -2853,7 +2977,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     ),
                   ),
                   Expanded(
-                      flex:5,
+                      flex:2,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -2885,7 +3009,14 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
                         ],
                       )),
-
+                  Expanded(
+                    flex: 5,
+                    child: isAdShow ? adPositionHistory ? SizedBox(
+                    height: double.parse(heightHistory),
+                    width: double.parse(widthHistory),
+                    child: AdWidget(ad: bannerAdForHistory),
+                  ): const SizedBox() : const SizedBox(),
+                  ),
 
                   Expanded(
                     flex: 1,
@@ -3601,6 +3732,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     bannerBottomAd.dispose();
     bannerAdForLauncher.dispose();
     bannerAdForHistory.dispose();
+    interstitialAd?.dispose();
     super.dispose();
   }
 }
@@ -3668,8 +3800,8 @@ class _SettingsAlertState extends State<SettingsAlert> {
         .child('setting_sizes')
         .onValue
         .listen((event) {
+      final size = event.snapshot.value;
       setState(() {
-        final size = event.snapshot.value;
         final value = size.toString().split('x');
         if (value.length == 2) {
           widthSettings = value[0];
@@ -3682,8 +3814,8 @@ class _SettingsAlertState extends State<SettingsAlert> {
         .child('setting_unit_id')
         .onValue
         .listen((event) {
+      final adUnitId = event.snapshot.value;
       setState(() {
-        final adUnitId = event.snapshot.value;
         final value = adUnitId.toString().split('&');
         if (value.length == 2) {
           adUnitSettings = value[0];
