@@ -104,6 +104,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late AdManagerBannerAd bannerBottomAd;
   late AdManagerBannerAd bannerAdForHistory;
   late AdManagerBannerAd bannerAdForLauncher;
+  late AdManagerBannerAd bannerAdForList;
   var heightHistory = "250",
       heightBottom = "50",
       heightLauncher = "250",
@@ -114,9 +115,13 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   bool adPositionHistory = false;
   bool adPositionLauncher = false;
   bool adPositionBottom = false;
-  var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "";
-  String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle";
+  bool adPositionList = false;
+  var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "", adUnitList = "";
+  String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle", listType = "banner";
   AdManagerInterstitialAd? interstitialAd;
+  bool flashOn = false;
+  bool flashOnBottomSheet = false;
+  int listItemCount = 0;
 
 
   void loadInterstitialAd() {
@@ -225,6 +230,33 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     )..load();
   }
 
+  void loadBottomBannerAdList() {
+    bannerAdForList = AdManagerBannerAd(
+      adUnitId: adUnitList,
+      request: const AdManagerAdRequest(),
+      sizes: [NavigationService.selectSize(listType)],
+      listener: AdManagerBannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          setState(() {
+            //isAdLoaded = true;
+          });
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          // Dispose the ad here to free resources.
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    )..load();
+  }
+
   // final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
 
 
@@ -271,6 +303,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
     loadBottomBannerAdLauncher();
+    loadBottomBannerAdList();
     getDataFromFirebase();
     _controller = AnimationController(
       vsync: this,
@@ -424,6 +457,43 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         loadBottomBannerAdLauncher();
       });
     });
+    NavigationService.databaseReference
+        .child('list_item_position')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        listItemCount = int.parse(position.toString());
+      });
+    });
+    /*NavigationService.databaseReference
+        .child('list_sizes')
+        .onValue
+        .listen((event) {
+      final size = event.snapshot.value;
+      setState(() {
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          wid = value[0];
+          heightBottom = value[1];
+        }
+      });
+    });*/
+
+    NavigationService.databaseReference
+        .child('list_unit_id')
+        .onValue
+        .listen((event) {
+      final adUnitId = event.snapshot.value;
+      setState(() {
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitList = value[0];
+          listType = value[1];
+        }
+        loadBottomBannerAd();
+      });
+    });
   }
 
   Future<void> vibrate() async {
@@ -478,10 +548,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ElevatedButton(
+                      /*ElevatedButton(
 
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
@@ -490,12 +560,14 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10), // Border radius
                             ),
+                            shadowColor: Colors.transparent
                           ),
                           onPressed: () async {
                             await controller?.toggleFlash();
                             setState(() {});
                           },
-                          child: FutureBuilder(
+                          child:
+                          FutureBuilder(
                             future: controller?.getFlashStatus(),
                             builder: (context, snapshot) {
                               return SvgPicture.asset(
@@ -504,7 +576,29 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 color: Colors.white,
                               );//Text('Flash: ${snapshot.data}',style: const TextStyle(color: Colors.white),);
                             },
-                          )),
+                          )),*/
+                      MyCustomButton(
+                            onPressed: () async {
+                          await controller?.toggleFlash();
+                          setState(() {
+                            flashOn = !flashOn;
+                          });
+                        },
+                            child: FutureBuilder(
+                          future: controller?.getFlashStatus(),
+                          builder: (context, snapshot) {
+                            return flashOn ? SvgPicture.asset(
+                                'assets/flash.svg',
+                                semanticsLabel: 'My SVG Image',
+                                color: Colors.white,
+                              ):SvgPicture.asset(
+                              'assets/flash_off.svg',
+                              semanticsLabel: 'My SVG Image',
+                              color: Colors.white,
+                            );//Text('Flash: ${snapshot.data}',style: const TextStyle(color: Colors.white),);
+                          },
+                        )
+                      ),
                       GestureDetector(
                         onVerticalDragEnd: (details) {
                           setState(() {
@@ -596,36 +690,30 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           ],
                         ),
                       ),
-                      GestureDetector(
-                        onTap: (){
-                          /* Navigator.push(
+                      MyCustomButton(onPressed: (){
+                        /* Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => HomeTest()));*/
-                          setState(() {
-                            NavigationService.count++;
-                            if(NavigationService.getCount() == -1){
-                              NavigationService.count = 0;
-                            }
-                            else if (NavigationService.getCount() == NavigationService.count) {
-                              try {
-                                loadInterstitialAd();
-                              } catch (error) {}
-                              interstitialAd?.show();
-                              NavigationService.count = 0;
-                            }
-                          });
-                          _showSettingsDialog('launcher');
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: SvgPicture.asset(
-                            'assets/settings.svg',
-                            semanticsLabel: 'My SVG Image',
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                        setState(() {
+                          NavigationService.count++;
+                          if(NavigationService.getCount() == -1){
+                            NavigationService.count = 0;
+                          }
+                          else if (NavigationService.getCount() == NavigationService.count) {
+                            try {
+                              loadInterstitialAd();
+                            } catch (error) {}
+                            interstitialAd?.show();
+                            NavigationService.count = 0;
+                          }
+                        });
+                        _showSettingsDialog('launcher');
+                      }, child: SvgPicture.asset(
+                        'assets/settings.svg',
+                        semanticsLabel: 'My SVG Image',
+                        color: Colors.white,
+                      ))
                       /*ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
@@ -661,7 +749,38 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 return const Text('loading');
                               }
                             },
-                          )),*/
+                          )),*/ /*GestureDetector(
+                        onTap: (){
+                          */
+                      /* Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HomeTest()));*/
+                      /*
+                          setState(() {
+                            NavigationService.count++;
+                            if(NavigationService.getCount() == -1){
+                              NavigationService.count = 0;
+                            }
+                            else if (NavigationService.getCount() == NavigationService.count) {
+                              try {
+                                loadInterstitialAd();
+                              } catch (error) {}
+                              interstitialAd?.show();
+                              NavigationService.count = 0;
+                            }
+                          });
+                          _showSettingsDialog('launcher');
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: SvgPicture.asset(
+                            'assets/settings.svg',
+                            semanticsLabel: 'My SVG Image',
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),*/
                     ],
                   ),
                     Align(
@@ -744,12 +863,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           ),
                           onPressed: () async {
                             await controller?.toggleFlash();
-                            setState(() {});
+                            setState(() {
+                              flashOnBottomSheet = !flashOnBottomSheet;
+                            });
                           },
                           child: FutureBuilder(
                             future: controller?.getFlashStatus(),
                             builder: (context, snapshot) {
-                              return SvgPicture.asset(
+                              return flashOnBottomSheet ? SvgPicture.asset(
+                                'assets/flash_off.svg',
+                                semanticsLabel: 'My SVG Image',
+                                color: Colors.black,
+                              ) :SvgPicture.asset(
                                 'assets/flash.svg',
                                 semanticsLabel: 'My SVG Image',
                               );//Text('Flash: ${snapshot.data}',style: const TextStyle(color: Colors.white),);
@@ -1319,43 +1444,58 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     visible: jsonResult['Web Url'] != null && jsonResult['Web Url'] != "",
                     child: Expanded(
                       flex: 1,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xff1976D2),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom:8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff1976D2),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                      ),
+                                      onPressed:() {
+                                        _launchURL(jsonResult['Web Url']);
+                                      }, child: const Text('Open',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    _launchURL(jsonResult['Web Url']);
-                                  }, child: const Text('Open',style: TextStyle(color: Colors.white))),
                             ),
-                          ),
-                          const SizedBox(width: 10,),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                            const SizedBox(width: 10,),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color:  const Color(0xff71717A),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: const Color(0xff71717A),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                        )// BorderRadius.circular(0), // Set your desired border radius here
+
+                                      ),
+                                      onPressed:() {
+                                        copyToClipboard(jsonResult['Web Url']);
+                                      }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    copyToClipboard(jsonResult['Web Url']);
-                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1364,6 +1504,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top: 8.0),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1373,13 +1514,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0, // Set elevation to 0 to remove it
-                              ),
-                              onPressed:() {
-                                callShareIntentURL(jsonResult['Web Url'], jsonResult["type"]);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:BorderRadius.circular(8.0)
+                                  )// Set elevation to 0 to remove it
+                                ),
+                                onPressed:() {
+                                  callShareIntentURL(jsonResult['Web Url'], jsonResult["type"]);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          ),
                         )),
                   )
                 ],
@@ -1456,7 +1602,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         ],
                       )),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: isAdShow ? adPositionLauncher ? SizedBox(
                       height: double.parse(heightLauncher),
                       width: double.parse(widthLauncher),
@@ -1468,55 +1614,66 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         && (jsonResult['password'] != null && jsonResult['password'] != ''),
                     child: Expanded(
                       flex: 1,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xff1976D2),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
-                              ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed: () async {
-                                    print("object" + jsonResult['ssid']);
-                                    // await PluginWifiConnect. ;
-                                    /*WiFiForIoTPlugin.connect(jsonResult['ssid'],
-                                password: jsonResult['password'],
-                                joinOnce: true,
-                                security: NetworkSecurity.WPA);*/
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 5.0, top: 5.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff1976D2),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed: () async {
+                                        print("object" + jsonResult['ssid']);
+                                        // await PluginWifiConnect. ;
+                                        /*WiFiForIoTPlugin.connect(jsonResult['ssid'],
+                                    password: jsonResult['password'],
+                                    joinOnce: true,
+                                    security: NetworkSecurity.WPA);*/
 
-                                    // await PluginWifiConnect.connect(ssid);
-                                    // bool isConnected =  await WiFiForIoTPlugin.isConnected();
-                                    // print("Is connected to Wi-Fi: $isConnected");
-                                    connectToWiFi(jsonResult['ssid'],jsonResult['password']);
-                                    //(jsonResult['ssid'], jsonResult['password']);
-                                    connectWifiChannel(jsonResult['ssid'], jsonResult['password']);
-                                  }, child: const Text('Connect',style: TextStyle(color: Colors.white))),
-                            ),
-                          ),
-                          const SizedBox(width: 10,),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                        // await PluginWifiConnect.connect(ssid);
+                                        // bool isConnected =  await WiFiForIoTPlugin.isConnected();
+                                        // print("Is connected to Wi-Fi: $isConnected");
+                                        connectToWiFi(jsonResult['ssid'],jsonResult['password']);
+                                        //(jsonResult['ssid'], jsonResult['password']);
+                                        connectWifiChannel(jsonResult['ssid'], jsonResult['password']);
+                                      }, child: const Text('Connect',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    copyToClipboard("SSID: ${jsonResult['ssid'] ?? ""}\nPassword: ${jsonResult['password'] ?? ""}");
-                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 10,),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff71717A),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed:() {
+                                        copyToClipboard("SSID: ${jsonResult['ssid'] ?? ""}\nPassword: ${jsonResult['password'] ?? ""}");
+                                      }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1528,6 +1685,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         child: Align(
                             alignment: Alignment.center,
                             child: Container(
+                              margin: EdgeInsets.only(top:5),
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -1537,13 +1695,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                   width: 2.0, // Set border width
                                 ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    elevation: 0,
-                                  ),
-                                  onPressed:(){
-                                    callShareIntentWifi(jsonResult["ssid"], jsonResult["password"], jsonResult["type"]);
-                                  }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                    ),
+                                    onPressed:(){
+                                      callShareIntentWifi(jsonResult["ssid"], jsonResult["password"], jsonResult["type"]);
+                                    }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                              ),
                             ))),
                   )
                 ],
@@ -1594,7 +1757,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       flex:3,
                       child: Text('Geo : ${jsonResult['latitude'] ?? ''} , ${jsonResult['longitude'] ?? ''}')),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: isAdShow ? adPositionLauncher ? SizedBox(
                       height: double.parse(heightLauncher),
                       width: double.parse(widthLauncher),
@@ -1606,42 +1769,53 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         || (jsonResult['longitude'] != null && jsonResult['longitude'] != ''),
                     child: Expanded(
                       flex: 1,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 5.0, top: 5.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color:  const Color(0xff1976D2),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed:() {
+                                        openMap(jsonResult['latitude'].toString(), jsonResult['longitude'].toString());
+                                      }, child: const Text('Maps',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    openMap(jsonResult['latitude'].toString(), jsonResult['longitude'].toString());
-                                  }, child: const Text('Maps',style: TextStyle(color: Colors.white))),
                             ),
-                          ),
-                          const SizedBox(width:10),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                            const SizedBox(width:10),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color:  const Color(0xff71717A),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed:() {
+                                        copyToClipboard("Latitude ${jsonResult['latitude']} Longitude ${jsonResult['longitude']}");
+                                      }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    copyToClipboard("Latitude ${jsonResult['latitude']} Longitude ${jsonResult['longitude']}");
-                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1651,6 +1825,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1660,13 +1835,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation:0,
-                              ),
-                              onPressed:() {
-                                callIntentGeo(jsonResult['latitude'].toString(), jsonResult['longitude'].toString(), jsonResult['type']);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation:0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                ),
+                                onPressed:() {
+                                  callIntentGeo(jsonResult['latitude'].toString(), jsonResult['longitude'].toString(), jsonResult['type']);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          ),
                         )),
                   )
                 ],
@@ -1738,14 +1918,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                           ),
                           width: double.infinity,
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  elevation: 0, // Set elevation to 0 to remove it
-                                  backgroundColor: Colors.transparent
-                              ),
-                              onPressed:() {
-                                copyToClipboard(jsonResult['BarCodeData']);
-                              }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0, // Set elevation to 0 to remove it
+                                    backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0)
+                                )
+                                ),
+                                onPressed:() {
+                                  copyToClipboard(jsonResult['BarCodeData']);
+                                }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                          ),
                         ),
                       ),
                     ),
@@ -1755,6 +1939,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1764,13 +1949,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                              ),
-                              onPressed:() {
-                                callIntentBarCode(jsonResult['BarCodeData'], jsonResult['type']);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                ),
+                                onPressed:() {
+                                  callIntentBarCode(jsonResult['BarCodeData'], jsonResult['type']);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          ),
                         )),
                   )
                 ],
@@ -1860,51 +2050,62 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   ),
                   Expanded(
                     flex: 1,
-                    child: Row(
-                      children: [
-                        Visibility(
-                          visible: jsonResult["summary"] != null || jsonResult["startDate"] != null ||
-                              jsonResult["endDate"] != null || jsonResult["location"] != null || jsonResult["description"],
-                          child: Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
-                              ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    openIntentCalenderAddEvent(jsonResult["summary"] ?? "",jsonResult['startDate'] ?? "",
-                                        jsonResult['endDate'] ?? "",jsonResult["location"] ?? ""
-                                        ,jsonResult["description"] ?? "",jsonResult["type"]);
-                                  }, child: const Text('Calendar',style: TextStyle(color: Colors.white))),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10,),
-                        Visibility(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 5.0),
+                      child: Row(
+                        children: [
+                          Visibility(
                             visible: jsonResult["summary"] != null || jsonResult["startDate"] != null ||
                                 jsonResult["endDate"] != null || jsonResult["location"] != null || jsonResult["description"],
                             child: Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color:  const Color(0xff71717A),
+                                  color:  const Color(0xff1976D2),
                                   borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                                 ),
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        elevation: 0, // Set elevation to 0 to remove it
-                                        backgroundColor: Colors.transparent
-                                    ),
-                                    onPressed:() {
-                                      copyToClipboard("Summary: ${jsonResult["summary"] ?? ""}\nStart Date:${jsonResult["startDate"] ?? ""}\n End Date: ${jsonResult["endDate"] ?? ""}\n Location:${jsonResult["location"] ?? ""}\n Description: ${jsonResult["description"] ?? ""}");
-                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed:() {
+                                        openIntentCalenderAddEvent(jsonResult["summary"] ?? "",jsonResult['startDate'] ?? "",
+                                            jsonResult['endDate'] ?? "",jsonResult["location"] ?? ""
+                                            ,jsonResult["description"] ?? "",jsonResult["type"]);
+                                      }, child: const Text('Calendar',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                            )),
-                      ],
+                            ),
+                          ),
+                          const SizedBox(width: 10,),
+                          Visibility(
+                              visible: jsonResult["summary"] != null || jsonResult["startDate"] != null ||
+                                  jsonResult["endDate"] != null || jsonResult["location"] != null || jsonResult["description"],
+                              child: Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color:  const Color(0xff71717A),
+                                    borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                  ),
+                                  child: SizedBox.expand(
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            elevation: 0, // Set elevation to 0 to remove it
+                                            backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                        ),
+                                        onPressed:() {
+                                          copyToClipboard("Summary: ${jsonResult["summary"] ?? ""}\nStart Date:${jsonResult["startDate"] ?? ""}\n End Date: ${jsonResult["endDate"] ?? ""}\n Location:${jsonResult["location"] ?? ""}\n Description: ${jsonResult["description"] ?? ""}");
+                                        }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
                     ),
                   ),
                   Visibility(
@@ -1913,6 +2114,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1922,15 +2124,21 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                              ),
-                              onPressed:() {
-                                callIntentCalender(jsonResult["summary"] ?? "",formatDate(DateTime.parse(jsonResult['startDate'] ?? DateTime.now()), 'd MMMM y'),
-                                    formatDate(DateTime.parse(jsonResult['endDate'] ?? DateTime.now()), 'd MMMM y'),jsonResult["location"] ?? ""
-                                    ,jsonResult["description"] ?? "",jsonResult["type"]);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black))),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0)
+                                  )
+
+                                  ),
+                                onPressed:() {
+                                  callIntentCalender(jsonResult["summary"] ?? "",formatDate(DateTime.parse(jsonResult['startDate'] ?? DateTime.now()), 'd MMMM y'),
+                                      formatDate(DateTime.parse(jsonResult['endDate'] ?? DateTime.now()), 'd MMMM y'),jsonResult["location"] ?? ""
+                                      ,jsonResult["description"] ?? "",jsonResult["type"]);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black))),
+                          ),
                         )),
                   )
                 ],
@@ -1962,7 +2170,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             Expanded(
                                 child: Container(
                                     child: const Center(
-                                        child:Text("Contact",style: TextStyle(fontSize: 24))))),
+                                        child:Text("Contact")))),
                             GestureDetector(
                               child: const Icon(Icons.close),
                               onTap: () {
@@ -1990,18 +2198,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           const Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('Name', style: TextStyle(fontSize: 20)),
-                              Text('Number', style: TextStyle(fontSize: 20)),
-                              Text('Email', style: TextStyle(fontSize: 20)),
+                              Text('Name'),
+                              Text('Number'),
+                              Text('Email'),
                               // Text('Address', style: TextStyle(fontSize: 20)),
                             ],
                           ),
                           const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(': ', style: TextStyle(fontSize: 20)),
-                              Text(': ', style: TextStyle(fontSize: 20)),
-                              Text(': ', style: TextStyle(fontSize: 20)),
+                              Text(': '),
+                              Text(': '),
+                              Text(': '),
                               // Text(': ', style: TextStyle(fontSize: 20)),
                             ],
                           ),
@@ -2009,9 +2217,9 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(jsonResult["FN"] ?? "", style: const TextStyle(fontSize: 20)),
-                                Text(jsonResult["TEL"] ?? "", style: const TextStyle(fontSize: 20)),
-                                Text(jsonResult["EMAIL"] ?? "", style: const TextStyle(fontSize: 20)),
+                                Text(jsonResult["FN"] ?? ""),
+                                Text(jsonResult["TEL"] ?? ""),
+                                Text(jsonResult["EMAIL"] ?? ""),
                                 // Text(jsonResult[""],
                                 //     style: TextStyle(fontSize: 20),
                                 //   softWrap: true,
@@ -2032,81 +2240,84 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   ),
                   Flexible(
                     flex: 1,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Visibility(
-                          visible: jsonResult["TEL"] != null,
-                          child: Flexible(
-                            flex: 1,
-                            child: Expanded(
-                              child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue, // Background color
-                                    border: Border.all(
-                                      color: Colors.blue, // Border color
-                                      width: 2.0, // Border width
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Visibility(
+                            visible: jsonResult["TEL"] != null,
+                            child: Flexible(
+                              flex: 1,
+                              child: Expanded(
+                                child: Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue, // Background color
+                                      border: Border.all(
+                                        color: Colors.blue, // Border color
+                                        width: 2.0, // Border width
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                          8.0), // Adjust the border radius
                                     ),
-                                    borderRadius: BorderRadius.circular(
-                                        8.0), // Adjust the border radius
-                                  ),
-                                  child: GestureDetector(onTap: () {
-                                    callPhoneIntent(jsonResult["TEL"]);
-                                  },
-                                      child: const Icon(Icons.call))),
+                                    child: GestureDetector(onTap: () {
+                                      callPhoneIntent(jsonResult["TEL"]);
+                                    },
+                                        child: const Icon(Icons.call))),
+                              ),
                             ),
                           ),
-                        ),
-                        Visibility(
-                          visible: (jsonResult["TEL"] != null && jsonResult["TEL"] != ""),
-                          // || (jsonResult["EMAIL"] != null && jsonResult["EMAIL"] != "")
-                          // || (jsonResult["FN"] != null && jsonResult["FN"] != ""),
-                          child: Flexible(
-                            flex: 1,
-                            child: Expanded(
-                              child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue, // Background color
-                                    border: Border.all(
-                                      color: Colors.blue, // Border color
-                                      width: 2.0, // Border width
+                          Visibility(
+                            visible: (jsonResult["TEL"] != null && jsonResult["TEL"] != ""),
+                            // || (jsonResult["EMAIL"] != null && jsonResult["EMAIL"] != "")
+                            // || (jsonResult["FN"] != null && jsonResult["FN"] != ""),
+                            child: Flexible(
+                              flex: 1,
+                              child: Expanded(
+                                child: Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue, // Background color
+                                      border: Border.all(
+                                        color: Colors.blue, // Border color
+                                        width: 2.0, // Border width
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                          8.0), // Adjust the border radius
                                     ),
-                                    borderRadius: BorderRadius.circular(
-                                        8.0), // Adjust the border radius
-                                  ),
-                                  child: GestureDetector(onTap: () {
-                                    callContactsIntent(jsonResult["TEL"], jsonResult["EMAIL"], jsonResult["FN"]);
-                                  },
-                                      child: const Icon(Icons.add_card_outlined))),
+                                    child: GestureDetector(onTap: () {
+                                      callContactsIntent(jsonResult["TEL"], jsonResult["EMAIL"], jsonResult["FN"]);
+                                    },
+                                        child: const Icon(Icons.add_card_outlined))),
+                              ),
                             ),
                           ),
-                        ),
-                        Visibility(
-                          visible: jsonResult["EMAIL"] != null,
-                          child: Flexible(
-                            flex: 1,
-                            child: Expanded(
-                              child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue, // Background color
-                                    border: Border.all(
-                                      color: Colors.blue, // Border color
-                                      width: 2.0, // Border width
+                          Visibility(
+                            visible: jsonResult["EMAIL"] != null,
+                            child: Flexible(
+                              flex: 1,
+                              child: Expanded(
+                                child: Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue, // Background color
+                                      border: Border.all(
+                                        color: Colors.blue, // Border color
+                                        width: 2.0, // Border width
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                          8.0), // Adjust the border radius
                                     ),
-                                    borderRadius: BorderRadius.circular(
-                                        8.0), // Adjust the border radius
-                                  ),
-                                  child: GestureDetector(onTap: () {
-                                    callEmailIntent(jsonResult["EMAIL"]);
-                                  },
-                                      child: const Icon(Icons.email))),
+                                    child: GestureDetector(onTap: () {
+                                      callEmailIntent(jsonResult["EMAIL"]);
+                                    },
+                                        child: const Icon(Icons.email))),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Visibility(
@@ -2191,7 +2402,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       flex:3,
                       child: Text(jsonResult['URL'] ?? "")),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: isAdShow ? adPositionLauncher ? SizedBox(
                       height: double.parse(heightLauncher),
                       width: double.parse(widthLauncher),
@@ -2214,7 +2425,10 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                       elevation: 0,
-                                      backgroundColor: Colors.transparent
+                                      backgroundColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                    )
                                   ),
                                   onPressed:() {
                                     openPaymentURL(jsonResult['URL']);
@@ -2324,21 +2538,25 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Expanded(
                       flex: 1,
                       child: Padding(
-                        padding: const EdgeInsets.only(top:8.0, bottom: 8.0),
+                        padding: const EdgeInsets.only( bottom: 5.0),
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color:  const Color(0xff71717A),
                             borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  elevation: 0, // Set elevation to 0 to remove it
-                                  backgroundColor: Colors.transparent
-                              ),
-                              onPressed:() {
-                                copyToClipboard(jsonResult['Blank']);
-                              }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0, // Set elevation to 0 to remove it
+                                    backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0)
+                                )
+                                ),
+                                onPressed:() {
+                                  copyToClipboard(jsonResult['Blank']);
+                                }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                          ),
                         ),
                       ),
                     ),
@@ -2348,6 +2566,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -2357,13 +2576,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                              ),
-                              onPressed:() {
-                                callIntentText(jsonResult['Blank'], jsonResult['type']);
-                              }, child: const Text('Share',style:TextStyle(color: Colors.black))),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                ),
+                                onPressed:() {
+                                  callIntentText(jsonResult['Blank'], jsonResult['type']);
+                                }, child: const Text('Share',style:TextStyle(color: Colors.black))),
+                          ),
                         )),
                   )
                 ],
@@ -2470,43 +2694,56 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   visible: url['Web Url'] != null && url['Web Url'] != "",
                   child: Expanded(
                     flex: 1,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xff1976D2),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 5.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xff1976D2),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                    ),
+                                    onPressed:() {
+                                      _launchURL(url['Web Url']);
+                                    }, child: const Text('Open',style: TextStyle(color: Colors.white))),
+                              ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed:() {
-                                  _launchURL(url['Web Url']);
-                                }, child: const Text('Open',style: TextStyle(color: Colors.white))),
                           ),
-                        ),
-                        const SizedBox(width: 10,),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color:  const Color(0xff71717A),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                          const SizedBox(width: 10,),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color:  const Color(0xff71717A),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                    ),
+                                    onPressed:() {
+                                      copyToClipboard(url['Web Url']);
+                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                              ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed:() {
-                                  copyToClipboard(url['Web Url']);
-                                }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -2515,6 +2752,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
+                        margin: EdgeInsets.only(top:5),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -2524,13 +2762,20 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             width: 2.0, // Set border width
                           ),
                         ),
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0, // Set elevation to 0 to remove it
-                            ),
-                            onPressed:() {
-                              callShareIntentURL(url['Web Url'], url["type"]);
-                            }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        child:
+                        SizedBox.expand(
+                          child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                  ),
+                                //backgroundColor: Colors.green// Set elevation to 0 to remove it
+                              ),
+                              onPressed:() {
+                                callShareIntentURL(url['Web Url'], url["type"]);
+                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        ),
                       )),
                 )
               ],
@@ -2620,56 +2865,69 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       && (url['password'] != null && url['password'] != ''),
                   child: Expanded(
                     flex: 1,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xff1976D2),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
-                            ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed: () async {
-                                  print("object" + url['ssid']);
-                                  // await PluginWifiConnect. ;
-                                  /*  WiFiForIoTPlugin.connect(jsonResult['ssid'],
-                                password: jsonResult['password'],
-                                joinOnce: true,
-                                security: NetworkSecurity.WPA);*/
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom:5.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xff1976D2),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                    ),
+                                    onPressed: () async {
+                                      print("object" + url['ssid']);
+                                      // await PluginWifiConnect. ;
+                                      /*  WiFiForIoTPlugin.connect(jsonResult['ssid'],
+                                    password: jsonResult['password'],
+                                    joinOnce: true,
+                                    security: NetworkSecurity.WPA);*/
 
 
-                                  // await PluginWifiConnect.connect(ssid);
-                                  // bool isConnected =  await WiFiForIoTPlugin.isConnected();
-                                  // print("Is connected to Wi-Fi: $isConnected");
-                                  connectToWiFi(url['ssid'],url['password']);
-                                  //(jsonResult['ssid'], jsonResult['password']);
-                                  connectWifiChannel(url['ssid'], url['password']);
-                                }, child: const Text('Connect',style: TextStyle(color: Colors.white))),
-                          ),
-                        ),
-                        const SizedBox(width: 10,),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xff71717A),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                      // await PluginWifiConnect.connect(ssid);
+                                      // bool isConnected =  await WiFiForIoTPlugin.isConnected();
+                                      // print("Is connected to Wi-Fi: $isConnected");
+                                      connectToWiFi(url['ssid'],url['password']);
+                                      //(jsonResult['ssid'], jsonResult['password']);
+                                      connectWifiChannel(url['ssid'], url['password']);
+                                    }, child: const Text('Connect',style: TextStyle(color: Colors.white))),
+                              ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed:() {
-                                  copyToClipboard("SSID: ${url['ssid'] ?? ""}\nPassword: ${url['password'] ?? ""}");
-                                }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 10,),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xff71717A),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                    ),
+                                    onPressed:() {
+                                      copyToClipboard("SSID: ${url['ssid'] ?? ""}\nPassword: ${url['password'] ?? ""}");
+                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -2681,6 +2939,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Align(
                           alignment: Alignment.center,
                           child: Container(
+                            margin: EdgeInsets.only(top: 5),
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -2690,13 +2949,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 width: 2.0, // Set border width
                               ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                ),
-                                onPressed:(){
-                                  callShareIntentWifi(url["ssid"], url["password"], url["type"]);
-                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                            child: SizedBox.expand(
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                  ),
+                                  onPressed:(){
+                                    callShareIntentWifi(url["ssid"], url["password"], url["type"]);
+                                  }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                            ),
                           ))),
                 )
               ],
@@ -2760,42 +3024,54 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       || (url['longitude'] != null && url['longitude'] != ''),
                   child: Expanded(
                     flex: 1,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color:  const Color(0xff71717A),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 5.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xff1976D2),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                    ),
+                                    onPressed:() {
+                                      openMap(url['latitude'].toString(), url['longitude'].toString());
+                                    }, child: const Text('Maps',style: TextStyle(color: Colors.white))),
+                              ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed:() {
-                                  openMap(url['latitude'].toString(), url['longitude'].toString());
-                                }, child: const Text('Maps',style: TextStyle(color: Colors.white))),
                           ),
-                        ),
-                        const SizedBox(width:10),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color:  const Color(0xff71717A),
-                              borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                          const SizedBox(width:10),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color:  const Color(0xff71717A),
+                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                              ),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0, // Set elevation to 0 to remove it
+                                        backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                    ),
+                                    onPressed:() {
+                                      copyToClipboard("Latitude ${url['latitude']} Longitude ${url['longitude']}");
+                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                              ),
                             ),
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0, // Set elevation to 0 to remove it
-                                    backgroundColor: Colors.transparent
-                                ),
-                                onPressed:() {
-                                  copyToClipboard("Latitude ${url['latitude']} Longitude ${url['longitude']}");
-                                }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -2805,6 +3081,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
+                        margin:EdgeInsets.only(top:5.0),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -2814,13 +3091,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             width: 2.0, // Set border width
                           ),
                         ),
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              elevation:0,
-                            ),
-                            onPressed:() {
-                              callIntentGeo(url['latitude'].toString(), url['longitude'].toString(), url['type']);
-                            }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        child: SizedBox.expand(
+                          child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation:0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                  )
+                              ),
+                              onPressed:() {
+                                callIntentGeo(url['latitude'].toString(), url['longitude'].toString(), url['type']);
+                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        ),
                       )),
                 )
               ],
@@ -2886,20 +3168,25 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     flex: 1,
                     child: Expanded(
                       child: Container(
-                        margin: const EdgeInsets.only(top: 8,bottom: 8),
+                        margin: const EdgeInsets.only(bottom: 5),
                         decoration: BoxDecoration(
                           color:  const Color(0xff71717A),
                           borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                         ),
                         width: double.infinity,
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                elevation: 0, // Set elevation to 0 to remove it
-                                backgroundColor: Colors.transparent
-                            ),
-                            onPressed:() {
-                              copyToClipboard(url['BarCodeData']);
-                            }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                        child: SizedBox.expand(
+                          child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  elevation: 0, // Set elevation to 0 to remove it
+                                  backgroundColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0)
+                                )
+                              ),
+                              onPressed:() {
+                                copyToClipboard(url['BarCodeData']);
+                              }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                        ),
                       ),
                     ),
                   ),
@@ -2909,6 +3196,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
+                        margin: EdgeInsets.only(top:5),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -2918,13 +3206,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             width: 2.0, // Set border width
                           ),
                         ),
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0,
-                            ),
-                            onPressed:() {
-                              callIntentBarCode(url['BarCodeData'], url['type']);
-                            }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        child: SizedBox.expand(
+                          child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                  )
+                              ),
+                              onPressed:() {
+                                callIntentBarCode(url['BarCodeData'], url['type']);
+                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                        ),
                       )),
                 )
               ],
@@ -3020,51 +3313,62 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
                   Expanded(
                     flex: 1,
-                    child: Row(
-                      children: [
-                        Visibility(
-                          visible: url["summary"] != null || url["startDate"] != null ||
-                              url["endDate"] != null || url["location"] != null || url["description"],
-                          child: Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
-                              ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0, // Set elevation to 0 to remove it
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    openIntentCalenderAddEvent(url["summary"] ?? "",url['startDate'] ?? "",
-                                        url['endDate'] ?? "",url["location"] ?? ""
-                                        ,url["description"] ?? "",url["type"]);
-                                  }, child: const Text('Calendar',style: TextStyle(color: Colors.white))),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10,),
-                        Visibility(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom:5.0),
+                      child: Row(
+                        children: [
+                          Visibility(
                             visible: url["summary"] != null || url["startDate"] != null ||
                                 url["endDate"] != null || url["location"] != null || url["description"],
                             child: Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color:  const Color(0xff71717A),
+                                  color:  const Color(0xff1976D2),
                                   borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                                 ),
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        elevation: 0, // Set elevation to 0 to remove it
-                                        backgroundColor: Colors.transparent
-                                    ),
-                                    onPressed:() {
-                                      copyToClipboard("Summary: ${url["summary"] ?? ""}\nStart Date:${url["startDate"] ?? ""}\n End Date: ${url["endDate"] ?? ""}\n Location:${url["location"] ?? ""}\n Description: ${url["description"] ?? ""}");
-                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                child: SizedBox.expand(
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          elevation: 0, // Set elevation to 0 to remove it
+                                          backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                      ),
+                                      onPressed:() {
+                                        openIntentCalenderAddEvent(url["summary"] ?? "",url['startDate'] ?? "",
+                                            url['endDate'] ?? "",url["location"] ?? ""
+                                            ,url["description"] ?? "",url["type"]);
+                                      }, child: const Text('Calendar',style: TextStyle(color: Colors.white))),
+                                ),
                               ),
-                            )),
-                      ],
+                            ),
+                          ),
+                          const SizedBox(width: 10,),
+                          Visibility(
+                              visible: url["summary"] != null || url["startDate"] != null ||
+                                  url["endDate"] != null || url["location"] != null || url["description"],
+                              child: Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color:  const Color(0xff71717A),
+                                    borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                  ),
+                                  child: SizedBox.expand(
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            elevation: 0, // Set elevation to 0 to remove it
+                                            backgroundColor: Colors.transparent,shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        )
+                                        ),
+                                        onPressed:() {
+                                          copyToClipboard("Summary: ${url["summary"] ?? ""}\nStart Date:${url["startDate"] ?? ""}\n End Date: ${url["endDate"] ?? ""}\n Location:${url["location"] ?? ""}\n Description: ${url["description"] ?? ""}");
+                                        }, child: const Text('Copy',style: TextStyle(color: Colors.white))),
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
                     ),
                   ),
                   Visibility(
@@ -3073,6 +3377,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
+                          margin: EdgeInsets.only(top:5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -3082,15 +3387,20 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                              ),
-                              onPressed:() {
-                                callIntentCalender(url["summary"] ?? "",formatDate(DateTime.parse(url['startDate'] ?? DateTime.now()), 'd MMMM y'),
-                                    formatDate(DateTime.parse(url['endDate'] ?? DateTime.now()), 'd MMMM y'),url["location"] ?? ""
-                                    ,url["description"] ?? "",url["type"]);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black))),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                ),
+                                onPressed:() {
+                                  callIntentCalender(url["summary"] ?? "",formatDate(DateTime.parse(url['startDate'] ?? DateTime.now()), 'd MMMM y'),
+                                      formatDate(DateTime.parse(url['endDate'] ?? DateTime.now()), 'd MMMM y'),url["location"] ?? ""
+                                      ,url["description"] ?? "",url["type"]);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black))),
+                          ),
                         )),
                   )
                 ],
@@ -3138,7 +3448,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       ]),
                 ),
                 Flexible(
-                  flex: 4,
+                  flex: 3,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 15, 8, 8),
                     child: Row(
@@ -3147,28 +3457,28 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Name', style: TextStyle(fontSize: 20)),
-                            Text('Number', style: TextStyle(fontSize: 20)),
-                            Text('Email', style: TextStyle(fontSize: 20)),
-                            // Text('Address', style: TextStyle(fontSize: 20)),
+                            Text('Name'),
+                            Text('Number'),
+                            Text('Email'),
+                            // Text('Address'),
                           ],
                         ),
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(': ', style: TextStyle(fontSize: 20)),
-                            Text(': ', style: TextStyle(fontSize: 20)),
-                            Text(': ', style: TextStyle(fontSize: 20)),
-                            // Text(': ', style: TextStyle(fontSize: 20)),
+                            Text(': '),
+                            Text(': '),
+                            Text(': '),
+                            // Text(': '),
                           ],
                         ),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(url["FN"] ?? "", style: const TextStyle(fontSize: 20)),
-                              Text(url["TEL"] ?? "", style: const TextStyle(fontSize: 20)),
-                              Text(url["EMAIL"] ?? "", style: const TextStyle(fontSize: 20)),
+                              Text(url["FN"] ?? ""),
+                              Text(url["TEL"] ?? ""),
+                              Text(url["EMAIL"] ?? ""),
                               // Text(jsonResult[""],
                               //     style: TextStyle(fontSize: 20),
                               //   softWrap: true,
@@ -3360,7 +3670,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   Visibility(
                     visible: url['URL'] != null && url['URL'] != "",
                     child: Padding(
-                      padding: const EdgeInsets.only(top:8.0,bottom: 8),
+                      padding: const EdgeInsets.only(bottom: 5),
                       child: Row(
                         children: [
                           Expanded(
@@ -3370,14 +3680,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 color:  const Color(0xff1976D2),
                                 borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0,
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    openPaymentURL(url['URL']);
-                                  }, child: const Text('Pay',style: TextStyle(color: Colors.white),)),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0,
+                                        backgroundColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                      )
+                                    ),
+                                    onPressed:() {
+                                      openPaymentURL(url['URL']);
+                                    }, child: const Text('Pay',style: TextStyle(color: Colors.white),)),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10,),
@@ -3388,14 +3703,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                 color:  const Color(0xff71717A),
                                 borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0,
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    copyToClipboard(url['URL']);
-                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                              child: SizedBox.expand(
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0,
+                                        backgroundColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)
+                                      )
+                                    ),
+                                    onPressed:() {
+                                      copyToClipboard(url['URL']);
+                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                              ),
                             ),
                           ),
                         ],
@@ -3417,13 +3737,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  elevation: 0
-                              ),
-                              onPressed:() {
-                                callIntentText(url['URL'], url['type']);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          child: SizedBox.expand(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    shape:RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
+                                    )
+                                ),
+                                onPressed:() {
+                                  callIntentText(url['URL'], url['type']);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          ),
                         )),
                   )
                 ],
@@ -3490,14 +3815,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         color:  const Color(0xff71717A),
                         borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                       ),
-                      child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              elevation: 0, // Set elevation to 0 to remove it
-                              backgroundColor: Colors.transparent
-                          ),
-                          onPressed:() {
-                            copyToClipboard(url['Blank']);
-                          }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                      child: SizedBox.expand(
+                        child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                elevation: 0, // Set elevation to 0 to remove it
+                                backgroundColor: Colors.transparent,shape:RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0)
+                            )
+                            ),
+                            onPressed:() {
+                              copyToClipboard(url['Blank']);
+                            }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
+                      ),
                     ),),
                 SizedBox(height: 10,),
                 Expanded(
@@ -3513,13 +3842,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         width: 2.0, // Set border width
                       ),
                     ),
-                    child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                        ),
-                        onPressed:() {
-                          callIntentText(url['Blank'], url['type']);
-                        }, child: const Text('Share',style:TextStyle(color: Colors.black))),
+                    child: SizedBox.expand(
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                              shape:RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0)
+                              )
+                          ),
+                          onPressed:() {
+                            callIntentText(url['Blank'], url['type']);
+                          }, child: const Text('Share',style:TextStyle(color: Colors.black))),
+                    ),
                   )),
               ],
             ),
@@ -4307,3 +4641,31 @@ class OnBoardingPageState extends State<OnBoardingPage> {
     );
   }
 }*/
+class MyCustomButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+  final Color color;
+
+  const MyCustomButton({
+    Key? key,
+    required this.onPressed,
+    required this.child,
+    this.color = Colors.transparent,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(8.0), // Adjust as per your requirement
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8.0), // Adjust as per your requirement
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
