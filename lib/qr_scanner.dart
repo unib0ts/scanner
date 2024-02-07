@@ -105,12 +105,15 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late AdManagerBannerAd bannerAdForHistory;
   late AdManagerBannerAd bannerAdForLauncher;
   late AdManagerBannerAd bannerAdForList;
+  static const int _itemsPerAd = 3;
   var heightHistory = "250",
       heightBottom = "50",
       heightLauncher = "250",
       widthHistory = "300",
       widthLauncher = "300",
-      widthBottom = "320";
+      widthBottom = "320",
+      heightList = "50",
+      widthList = "320";
   bool isAdShow = false;
   bool adPositionHistory = false;
   bool adPositionLauncher = false;
@@ -275,7 +278,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     prefs = await SharedPreferences.getInstance();
     final jsonStringList = prefs.getStringList('scanHistory') ?? [];
     jsonDataList = jsonStringList.map((jsonString) => Map<String, dynamic>.from(json.decode(jsonString))).toList();
-
     return jsonDataList;
   }
   Future<void> saveJsonDataList(List<Map<String, dynamic>> dataList) async {
@@ -303,7 +305,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
     loadBottomBannerAdLauncher();
-    loadBottomBannerAdList();
+    //loadBottomBannerAdList();
     getDataFromFirebase();
     _controller = AnimationController(
       vsync: this,
@@ -466,7 +468,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         listItemCount = int.parse(position.toString());
       });
     });
-    /*NavigationService.databaseReference
+    NavigationService.databaseReference
         .child('list_sizes')
         .onValue
         .listen((event) {
@@ -474,12 +476,11 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       setState(() {
         final value = size.toString().split('x');
         if (value.length == 2) {
-          wid = value[0];
-          heightBottom = value[1];
+          widthList = value[0];
+          heightList = value[1];
         }
       });
-    });*/
-
+    });
     NavigationService.databaseReference
         .child('list_unit_id')
         .onValue
@@ -491,7 +492,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
           adUnitList = value[0];
           listType = value[1];
         }
-        loadBottomBannerAd();
+        loadBottomBannerAdList();
       });
     });
   }
@@ -924,96 +925,112 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else {
-                        List<Map<String, dynamic>> loadedList = snapshot.data as List<Map<String, dynamic>> ?? [];
-                        return loadedList.isNotEmpty ?
-                        Column(
-                          children: [
-                            for (Map<String, dynamic> item in loadedList)
-                              GestureDetector(
-                                  onTap:(){
-                                    setState(() {
-                                      historyItemTapped = true;
-                                      NavigationService.count++;
-                                      if(NavigationService.getCount() == -1){
-                                        NavigationService.count = 0;
-                                      }
-                                      else if (NavigationService.getCount() == NavigationService.count) {
-                                        try {
-                                          loadInterstitialAd();
-                                        } catch (error) {}
-                                        interstitialAd?.show();
-                                        NavigationService.count = 0;
-                                      }
-                                    });
-                                    print(item);
-                                    _showHistoryDialog(context, item, item['type']);
-                                  },
-                                  child: Container(
-                                      height: 80,
-                                      width: double.infinity,
-                                      decoration:const BoxDecoration(
-                                          color: Color(0xffF4F4F4),
-                                          borderRadius: BorderRadius.all(Radius.circular(8))
-                                      ),
-                                      margin: const EdgeInsets.all(10),
-                                      child: Row(
-
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            //mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                            children: [
-                                              Container(
-                                                  margin: const EdgeInsets.only(left: 8,right: 8),
-                                                  color: Colors.white,
-                                                  child:  Padding(
-                                                    padding: EdgeInsets.all(8.0),
-                                                    child: SvgPicture.asset(
-                                                      'assets/qr_code.svg',
-                                                      semanticsLabel: 'My SVG Image',
-                                                    ),
-                                                  )),
-                                              Padding(
-                                                padding: const EdgeInsets.only(top:16,left: 5),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                        List<Map<String, dynamic>> loadedList = snapshot.data as List<Map<String, dynamic>>;
+                        print("loadedList" + loadedList.toString());
+                        return Container(
+                          height: MediaQuery.of(context).size.height,
+                          child: ListView.builder(
+                            itemCount: loadedList.length + (loadedList.length ~/ _itemsPerAd),
+                            itemBuilder: (context, index) {
+                              if ((index + 1) % (_itemsPerAd + 1) == 0) {
+                                // Display a banner ad after every _itemsPerAd items
+                                return SizedBox(
+                                  height: 50,
+                                  child: AdWidget(ad: bannerAdForList),
+                                );
+                              } else {
+                                final itemIndex = index - (index ~/ (_itemsPerAd + 1));
+                                return loadedList.isNotEmpty ? Column(
+                                  children: [
+                                    GestureDetector(
+                                        onTap:(){
+                                          setState(() {
+                                            historyItemTapped = true;
+                                            NavigationService.count++;
+                                            if(NavigationService.getCount() == -1){
+                                              NavigationService.count = 0;
+                                            }
+                                            else if (NavigationService.getCount() == NavigationService.count) {
+                                              try {
+                                                loadInterstitialAd();
+                                              } catch (error) {}
+                                              interstitialAd?.show();
+                                              NavigationService.count = 0;
+                                            }
+                                          });
+                                          print("YASH" + loadedList[itemIndex].toString());
+                                          //_showHistoryDialog(context, item, item['type']);
+                                        },
+                                        child: Container(
+                                            height: 85,
+                                            width: double.infinity,
+                                            decoration:const BoxDecoration(
+                                                color: Color(0xffF4F4F4),
+                                                borderRadius: BorderRadius.all(Radius.circular(8))
+                                            ),
+                                            margin: const EdgeInsets.all(10),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
+                                                  //mainAxisAlignment: MainAxisAlignment.spaceAround,
                                                   children: [
-                                                    item['type']=='WIFI'?Text(item['ssid']?? '' ):
-                                                    item['type']=='Calendar' ? Text(item['summary']??'') :
-                                                    item['type']=='Location'? Text('${item['latitude']??''} , ${item['longitude']?? ''}') :
-                                                    item['type']=='BarCode'? Text(item['BarCodeData']):
-                                                    item['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(item['Web Url'],overflow: TextOverflow.ellipsis,)):
-                                                    item['type']=='Contact'? Text(item['FN']):
-                                                    item['type']=='upi'? Container( constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(item['URL'],overflow: TextOverflow.ellipsis,/*maxLines: 2,*/)):
-                                                    item['type']=='Undefined'? const Text('unknown') :const Text('hi'),
+                                                    Container(
+                                                        margin: const EdgeInsets.only(left: 8,right: 8),
+                                                        color: Colors.white,
+                                                        child:  Padding(
+                                                          padding: EdgeInsets.all(8.0),
+                                                          child: SvgPicture.asset(
+                                                            'assets/qr_code.svg',
+                                                            semanticsLabel: 'My SVG Image',
+                                                          ),
+                                                        )),
                                                     Padding(
-                                                      padding: const EdgeInsets.only(top:8.0),
-                                                      child: Text(item['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: TextStyle(color: Color(0xFFB2B0B0)),),
+                                                      padding: const EdgeInsets.only(top:16,left: 5),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          loadedList[itemIndex]['type']=='WIFI'?Text(loadedList[itemIndex]['ssid']?? '' ):
+                                                          loadedList[itemIndex]['type']=='Calendar' ? Text(loadedList[itemIndex]['summary']??'') :
+                                                          loadedList[itemIndex]['type']=='Location'? Text('${loadedList[itemIndex]['latitude']??''} , ${loadedList[itemIndex]['longitude']?? ''}') :
+                                                          loadedList[itemIndex]['type']=='BarCode'? Text(loadedList[itemIndex]['BarCodeData']):
+                                                          loadedList[itemIndex]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[itemIndex]['Web Url'],overflow: TextOverflow.ellipsis,)):
+                                                          loadedList[itemIndex]['type']=='Contact'? Text(loadedList[itemIndex]['FN']):
+                                                          loadedList[itemIndex]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[itemIndex]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
+                                                          loadedList[itemIndex]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(top:8.0),
+                                                            child: Text(loadedList[itemIndex]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: TextStyle(color: Color(0xFFB2B0B0)),),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(formatDateTime(DateTime.parse(item['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
-                                          )
-                                        ],
-                                      ))),
-                          ],
-                        ) : const Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(height: 300,),
-                            Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
-                          ],
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
+                                                )
+                                              ],
+                                            )
+                                        )
+                                    ),
+                                    //for (Map<String, dynamic> item in loadedList)
+                                      ],
+                                )
+                                    : const Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(height: 300,),
+                                    Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
+                                  ],
+                                );
+                              }
+                                                }),
                         );
                       }
                     },
-                  )
-
-                ],
+                  ),],
               ),
             ),
           ),
