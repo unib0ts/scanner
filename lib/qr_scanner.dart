@@ -892,20 +892,9 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       ),
                       GestureDetector(
                         onTap: (){
-                          setState(() {
-                            NavigationService.count++;
-                            if(NavigationService.getCount() == -1){
-                              NavigationService.count = 0;
-                            }
-                            else if (NavigationService.getCount() == NavigationService.count) {
-                              try {
-                                loadInterstitialAd();
-                              } catch (error) {}
-                              interstitialAd?.show();
-                              NavigationService.count = 0;
-                            }
-                          });
+                          // open Settings Page Please
                           _showSettingsDialog('history');
+                          print('Settings');
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -930,16 +919,18 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         return Container(
                           height: MediaQuery.of(context).size.height,
                           child: ListView.builder(
-                            itemCount: loadedList.length + (loadedList.length ~/ _itemsPerAd),
+                            itemCount: loadedList.length + 1,
                             itemBuilder: (context, index) {
-                              if ((index + 1) % (_itemsPerAd + 1) == 0) {
-                                // Display a banner ad after every _itemsPerAd items
+                              if (index == listItemCount) {
+                                // Display the banner ad after the third item
                                 return SizedBox(
-                                  height: 50,
+                                  height: double.parse(heightList),
+                                  width: double.parse(widthList),
                                   child: AdWidget(ad: bannerAdForList),
                                 );
-                              } else {
-                                final itemIndex = index - (index ~/ (_itemsPerAd + 1));
+                               }
+                              else if (index > listItemCount) {
+                                final itemIndex = index - 1;
                                 return loadedList.isNotEmpty ? Column(
                                   children: [
                                     GestureDetector(
@@ -959,7 +950,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                             }
                                           });
                                           print("YASH" + loadedList[itemIndex].toString());
-                                          //_showHistoryDialog(context, item, item['type']);
+                                          _showHistoryDialog(context, loadedList[itemIndex], loadedList[itemIndex]['type']);
                                         },
                                         child: Container(
                                             height: 85,
@@ -1010,6 +1001,93 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                                 Padding(
                                                   padding: const EdgeInsets.all(8.0),
                                                   child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
+                                                )
+                                              ],
+                                            )
+                                        )
+                                    ),
+                                    //for (Map<String, dynamic> item in loadedList)
+                                  ],
+                                )
+                                    : const Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(height: 300,),
+                                    Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
+                                  ],
+                                );
+                              }
+                              else {
+                                return loadedList.isNotEmpty ? Column(
+                                  children: [
+                                    GestureDetector(
+                                        onTap:(){
+                                          setState(() {
+                                            historyItemTapped = true;
+                                            NavigationService.count++;
+                                            if(NavigationService.getCount() == -1){
+                                              NavigationService.count = 0;
+                                            }
+                                            else if (NavigationService.getCount() == NavigationService.count) {
+                                              try {
+                                                loadInterstitialAd();
+                                              } catch (error) {}
+                                              interstitialAd?.show();
+                                              NavigationService.count = 0;
+                                            }
+                                          });
+                                          print("YASH" + loadedList[index].toString());
+                                          _showHistoryDialog(context, loadedList[index], loadedList[index]['type']);
+                                        },
+                                        child: Container(
+                                            height: 85,
+                                            width: double.infinity,
+                                            decoration:const BoxDecoration(
+                                                color: Color(0xffF4F4F4),
+                                                borderRadius: BorderRadius.all(Radius.circular(8))
+                                            ),
+                                            margin: const EdgeInsets.all(10),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
+                                                  //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                  children: [
+                                                    Container(
+                                                        margin: const EdgeInsets.only(left: 8,right: 8),
+                                                        color: Colors.white,
+                                                        child:  Padding(
+                                                          padding: EdgeInsets.all(8.0),
+                                                          child: SvgPicture.asset(
+                                                            'assets/qr_code.svg',
+                                                            semanticsLabel: 'My SVG Image',
+                                                          ),
+                                                        )),
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(top:16,left: 5),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          loadedList[index]['type']=='WIFI'?Text(loadedList[index]['ssid']?? '' ):
+                                                          loadedList[index]['type']=='Calendar' ? Text(loadedList[index]['summary']??'') :
+                                                          loadedList[index]['type']=='Location'? Text('${loadedList[index]['latitude']??''} , ${loadedList[index]['longitude']?? ''}') :
+                                                          loadedList[index]['type']=='BarCode'? Text(loadedList[index]['BarCodeData']):
+                                                          loadedList[index]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[index]['Web Url'],overflow: TextOverflow.ellipsis,)):
+                                                          loadedList[index]['type']=='Contact'? Text(loadedList[index]['FN']):
+                                                          loadedList[index]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[index]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
+                                                          loadedList[index]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(top:8.0),
+                                                            child: Text(loadedList[index]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: TextStyle(color: Color(0xFFB2B0B0)),),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
                                                 )
                                               ],
                                             )

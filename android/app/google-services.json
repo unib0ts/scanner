@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "400123213441",
-    "project_id": "scanner-f9d73",
-    "storage_bucket": "scanner-f9d73.appspot.com"
+    "project_number": "633767644899",
+    "project_id": "qrscanner-d1350",
+    "storage_bucket": "qrscanner-d1350.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:400123213441:android:dc9f783b569b282281bf80",
+        "mobilesdk_app_id": "1:633767644899:android:af71e5942aa2aa0e8d3fd6",
         "android_client_info": {
-          "package_name": "com.snanner.scanner"
+          "package_name": "com.efficiencyhive.qrscanner"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBLUcApYpsT79tgZxJVJ_KAxMjeWQU3WHM"
+          "current_key": "AIzaSyCVsl4DzuTXfQ7Fbae0eFfioC-GET4t2IQ"
         }
       ],
       "services": {

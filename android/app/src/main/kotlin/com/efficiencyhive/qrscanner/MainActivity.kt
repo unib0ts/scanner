@@ -1,4 +1,4 @@
-package com.snanner.scanner
+package com.efficiencyhive.qrscanner
 
 import android.content.Context
 import android.content.Intent
