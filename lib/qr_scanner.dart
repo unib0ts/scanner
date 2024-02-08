@@ -105,6 +105,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   late AdManagerBannerAd bannerAdForHistory;
   late AdManagerBannerAd bannerAdForLauncher;
   late AdManagerBannerAd bannerAdForList;
+  late AdManagerBannerAd bannerAdForHistoryBottom;
   static const int _itemsPerAd = 3;
   var heightHistory = "250",
       heightBottom = "50",
@@ -113,14 +114,17 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       widthLauncher = "300",
       widthBottom = "320",
       heightList = "50",
-      widthList = "320";
+      widthList = "320",
+      heightHistoryBottom = "50",
+      widthHistoryBottom = "320";
   bool isAdShow = false;
   bool adPositionHistory = false;
   bool adPositionLauncher = false;
   bool adPositionBottom = false;
   bool adPositionList = false;
-  var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "", adUnitList = "";
-  String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle", listType = "banner";
+  bool adPositionHistoryBottom = false;
+  var adUnitBottom = "", adUnitHistory = "", adInterstitialUnitId = "", adUnitLauncher = "", adUnitList = "", adUnitHistoryBottom = "";
+  String historyType = "mediumRectangle", bottomType = "banner", launcherType = "mediumRectangle", listType = "banner", historyBottomType = "banner";
   AdManagerInterstitialAd? interstitialAd;
   bool flashOn = false;
   bool flashOnBottomSheet = false;
@@ -260,6 +264,33 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     )..load();
   }
 
+  void loadBottomBannerAdHistoryBottom() {
+    bannerAdForHistoryBottom = AdManagerBannerAd(
+      adUnitId: adUnitHistoryBottom,
+      request: const AdManagerAdRequest(),
+      sizes: [NavigationService.selectSize(historyBottomType)],
+      listener: AdManagerBannerAdListener(
+        // Called when an ad is successfully received.
+        onAdLoaded: (ad) {
+          /*setState(() {
+            //isAdLoaded = true;
+          });*/
+        },
+        // Called when an ad request failed.
+        onAdFailedToLoad: (ad, err) {
+          // Dispose the ad here to free resources.
+          ad.dispose();
+        },
+        // Called when an ad opens an overlay that covers the screen.
+        onAdOpened: (Ad ad) {},
+        // Called when an ad removes an overlay that covers the screen.
+        onAdClosed: (Ad ad) {},
+        // Called when an impression occurs on the ad.
+        onAdImpression: (Ad ad) {},
+      ),
+    )..load();
+  }
+
   // final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
 
 
@@ -305,7 +336,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     loadBottomBannerAd();
     loadBottomBannerAdHistory();
     loadBottomBannerAdLauncher();
-    //loadBottomBannerAdList();
+    loadBottomBannerAdList();
+    //loadBottomBannerAdHistoryBottom();
     getDataFromFirebase();
     _controller = AnimationController(
       vsync: this,
@@ -459,6 +491,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         loadBottomBannerAdLauncher();
       });
     });
+    /* History Screen */
     NavigationService.databaseReference
         .child('list_item_position')
         .onValue
@@ -493,6 +526,47 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
           listType = value[1];
         }
         loadBottomBannerAdList();
+      });
+    });
+    /* History Bottom */
+    NavigationService.databaseReference
+        .child('history_bottom_dialog_positions')
+        .onValue
+        .listen((event) {
+      final position = event.snapshot.value;
+      setState(() {
+        if (position.toString().toLowerCase() == 'bottom') {
+          adPositionHistoryBottom = true;
+        } else {
+          adPositionHistoryBottom = false;
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('history_bottom_dialog_sizes')
+        .onValue
+        .listen((event) {
+      final size = event.snapshot.value;
+      setState(() {
+        final value = size.toString().split('x');
+        if (value.length == 2) {
+          widthHistoryBottom = value[0];
+          heightHistoryBottom = value[1];
+        }
+      });
+    });
+    NavigationService.databaseReference
+        .child('history_bottom_dialog_unit_id')
+        .onValue
+        .listen((event) {
+      final adUnitId = event.snapshot.value;
+      setState(() {
+        final value = adUnitId.toString().split('&');
+        if (value.length == 2) {
+          adUnitHistoryBottom = value[0];
+          historyBottomType = value[1];
+        }
+        loadBottomBannerAdHistoryBottom();
       });
     });
   }
@@ -810,6 +884,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
 
   void _showBottomSheet(BuildContext context) {
+    loadBottomBannerAdHistoryBottom();
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -928,9 +1003,96 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           return Container(
                             height: MediaQuery.of(context).size.height,
                             child: ListView.builder(
-                                itemCount: loadedList.length + 1,
+                                itemCount: loadedList.length,
                                 itemBuilder: (context, index) {
-                                  if (index == listItemCount) {
+
+                                  return loadedList.isNotEmpty ?
+                                  Column(
+                                    children: [
+                                      GestureDetector(
+                                          onTap:(){
+                                            setState(() {
+                                              historyItemTapped = true;
+                                              NavigationService.count++;
+                                              if(NavigationService.getCount() == -1){
+                                                NavigationService.count = 0;
+                                              }
+                                              else if (NavigationService.getCount() == NavigationService.count) {
+                                                try {
+                                                  loadInterstitialAd();
+                                                } catch (error) {}
+                                                interstitialAd?.show();
+                                                NavigationService.count = 0;
+                                              }
+                                            });
+                                            print("YASH" + loadedList[index].toString());
+                                            _showHistoryDialog(context, loadedList[index], loadedList[index]['type']);
+                                          },
+                                          child: Container(
+                                              height: 85,
+                                              width: double.infinity,
+                                              decoration:const BoxDecoration(
+                                                  color: Color(0xffF4F4F4),
+                                                  borderRadius: BorderRadius.all(Radius.circular(8))
+                                              ),
+                                              margin: const EdgeInsets.all(10),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Row(
+                                                    //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                    children: [
+                                                      Container(
+                                                          margin: const EdgeInsets.only(left: 8,right: 8),
+                                                          color: Colors.white,
+                                                          child:  Padding(
+                                                            padding: const EdgeInsets.all(8.0),
+                                                            child: SvgPicture.asset(
+                                                              'assets/qr_code.svg',
+                                                              semanticsLabel: 'My SVG Image',
+                                                            ),
+                                                          )),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(top:16,left: 5),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            loadedList[index]['type']=='WIFI'?Text(loadedList[index]['ssid']?? '' ):
+                                                            loadedList[index]['type']=='Calendar' ? Text(loadedList[index]['summary']??'') :
+                                                            loadedList[index]['type']=='Location'? Text('${loadedList[index]['latitude']??''} , ${loadedList[index]['longitude']?? ''}') :
+                                                            loadedList[index]['type']=='BarCode'? Text(loadedList[index]['BarCodeData']):
+                                                            loadedList[index]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[index]['Web Url'],overflow: TextOverflow.ellipsis,)):
+                                                            loadedList[index]['type']=='Contact'? Text(loadedList[index]['FN']):
+                                                            loadedList[index]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[index]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
+                                                            loadedList[index]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(top:8.0),
+                                                              child: Text(loadedList[index]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(6.0),
+                                                    child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),textScaleFactor: 1),
+                                                  )
+                                                ],
+                                              )
+                                          )
+                                      ),
+                                      //for (Map<String, dynamic> item in loadedList)
+                                    ],
+                                  )
+                                      : const Column(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(height: 300,),
+                                      Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
+                                    ],
+                                  );
+                                  /*if (index == listItemCount) {
                                     // Display the banner ad after the third item
                                     return SizedBox(
                                       height: double.parse(heightList),
@@ -1008,8 +1170,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                                       ],
                                                     ),
                                                     Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                      padding: const EdgeInsets.all(6.0),
+                                                      child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),textScaleFactor: 1,),
                                                     )
                                                   ],
                                                 )
@@ -1027,7 +1189,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                     );
                                   }
                                   else {
-                                    return loadedList.isNotEmpty ? Column(
+                                    return loadedList.isNotEmpty ?
+                                    Column(
                                       children: [
                                         GestureDetector(
                                             onTap:(){
@@ -1095,8 +1258,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                                       ],
                                                     ),
                                                     Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                      padding: const EdgeInsets.all(6.0),
+                                                      child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),textScaleFactor: 1),
                                                     )
                                                   ],
                                                 )
@@ -1112,7 +1275,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                         Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
                                       ],
                                     );
-                                  }
+                                  }*/
                                 }),
                           );
                         }
@@ -1120,15 +1283,15 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     ),],
                 ),
               ),
-                /*Align(
+                Align(
                   alignment:  Alignment.bottomCenter,
-                  child: Container(
-                    //alignment: Alignment.topCenter,
+                  child: true ? true ? Container(
                     color: Colors.green,
-                    width:320,
-                    height: 50,
-                  ),
-                ),*/
+                    height: double.parse(heightHistoryBottom),
+                    width: double.parse(widthHistoryBottom),
+                    child: AdWidget(ad: bannerAdForHistoryBottom),
+                  ) : const SizedBox() : const SizedBox(),
+                ),
               ]
               ,
             ),
@@ -4200,6 +4363,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     bannerBottomAd.dispose();
     bannerAdForLauncher.dispose();
     bannerAdForHistory.dispose();
+    bannerAdForHistoryBottom.dispose();
     interstitialAd?.dispose();
     super.dispose();
   }
@@ -4379,7 +4543,9 @@ void loadSettingsBannerAd() {
                     child: Center(child: Text('Settings',
                       style: TextStyle(fontSize: 24,
                         color: Colors.black,
-                        /*fontWeight: FontWeight.bold*/),))),
+                        /*fontWeight: FontWeight.bold*/),
+
+                    ))),
                 GestureDetector(
                     onTap: () {
                       // Dismiss the AlertDialog
@@ -4409,6 +4575,7 @@ void loadSettingsBannerAd() {
                               style: TextStyle(fontSize: 14,
                                   color: Color(0xFFB2B0B0)
                               ),
+                              textScaleFactor: 1,
                             ),
                           ],
                         ),
@@ -4435,6 +4602,7 @@ void loadSettingsBannerAd() {
                                 style: TextStyle(fontSize: 15,
                                     color: Colors.black
                                 ),
+                                textScaleFactor: 1,
                               ),Text(
                                 'Instant Website',
                                 style: TextStyle(fontSize: 14,

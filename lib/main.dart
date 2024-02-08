@@ -43,7 +43,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  late AdManagerBannerAd bannerBottomAd;
+  //late AdManagerBannerAd bannerBottomAd;
 
 
   void _incrementCounter() {
@@ -52,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+/*
   void loadBottomBannerAd() {
     bannerBottomAd = AdManagerBannerAd(
       adUnitId: '/21928950349/com.example.qr_scanner_320x50',
@@ -78,10 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     )..load();
   }
+*/
 
   @override
   void initState() {
-    loadBottomBannerAd();
+    //loadBottomBannerAd();
     super.initState();
   }
 
@@ -105,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text(
               'You have pushed the button this many times:',
             ),
-            Container(
+           /* Container(
               width: double.infinity,
               height: 100,
               color: Colors.green,
@@ -113,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ad: bannerBottomAd,
               ),
 
-            ),
+            ),*/
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
