@@ -647,7 +647,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                         _showBottomSheet(context);
                                       },
                                       //(){_showBottomSheet(context);},
-                                      icon: Icon(Icons.expand_less,color: Colors.white,size: 34,),),
+                                      icon: const Icon(Icons.expand_less,color: Colors.white,size: 34,),),
                                   );
                                 }
 
@@ -669,7 +669,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                   });
                                   _showBottomSheet(context);
                                 },
-                                child: Text('Scan History',style: TextStyle(color: Colors.white),)),
+                                child: const Text('Scan History',style: TextStyle(color: Colors.white),)),
                             GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -687,7 +687,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                   });
                                   _showBottomSheet(context);
                                 },
-                                child: Text('Swipe up',style: TextStyle(color: Colors.white,fontSize: 10),))
+                                child: const Text('Swipe up',style: TextStyle(color: Colors.white,fontSize: 10),))
                           ],
                         ),
                       ),
@@ -792,7 +792,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         height: double.parse(heightBottom),
                         child: AdWidget(
                           ad: bannerBottomAd,
-                        ),) : const SizedBox() : SizedBox(),
+                        ),) : const SizedBox() : const SizedBox(),
                     )
                 ],
               ),
@@ -844,272 +844,293 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
               }
               return false;
             },*/
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 60,),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: Colors.transparent, // Background color
-                            // padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), // Border radius
+            child: Stack(
+              //alignment: Alignment.bottomCenter,
+              children: [
+                SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60,),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        /*ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor: Colors.transparent, // Background color
+                              // padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10), // Border radius
+                              ),
+                            ),
+                            onPressed: () {
+                              *//*await controller?.toggleFlash();
+                              setState(() {
+                                flashOnBottomSheet = !flashOnBottomSheet;
+                              });*//*
+                              Navigator.of(context).pop;
+                            },
+                            child:Icon(Icons.arrow_back,color: Colors.black,),),*/
+                        /*FutureBuilder(
+                              future: controller?.getFlashStatus(),
+                              builder: (context, snapshot) {
+                                return flashOnBottomSheet ? SvgPicture.asset(
+                                  'assets/flash_off.svg',
+                                  semanticsLabel: 'My SVG Image',
+                                  color: Colors.black,
+                                ) :SvgPicture.asset(
+                                  'assets/flash.svg',
+                                  semanticsLabel: 'My SVG Image',
+                                );//Text('Flash: ${snapshot.data}',style: const TextStyle(color: Colors.white),);
+                              },
+                            )),*/
+                        const Expanded(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(left:20),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.expand_more),
+                                  Text('Scanning history',style: TextStyle(color: Colors.black,fontSize: 20),),
+                                ],
+                              ),
                             ),
                           ),
-                          onPressed: () async {
-                            await controller?.toggleFlash();
-                            setState(() {
-                              flashOnBottomSheet = !flashOnBottomSheet;
-                            });
-                          },
-                          child: FutureBuilder(
-                            future: controller?.getFlashStatus(),
-                            builder: (context, snapshot) {
-                              return flashOnBottomSheet ? SvgPicture.asset(
-                                'assets/flash_off.svg',
-                                semanticsLabel: 'My SVG Image',
-                                color: Colors.black,
-                              ) :SvgPicture.asset(
-                                'assets/flash.svg',
-                                semanticsLabel: 'My SVG Image',
-                              );//Text('Flash: ${snapshot.data}',style: const TextStyle(color: Colors.white),);
-                            },
-                          )),
-                      const Padding(
-                        padding: EdgeInsets.only(right: 16.0),
-                        child: Column(
-                          children: [
-                            Icon(Icons.expand_more),
-                            Text('Scanning history',style: TextStyle(color: Colors.black,fontSize: 20),),
-                          ],
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: (){
-                          // open Settings Page Please
-                          _showSettingsDialog('history');
-                          print('Settings');
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: SvgPicture.asset(
-                            'assets/settings.svg',
-                            semanticsLabel: 'My SVG Image',
+                        GestureDetector(
+                          onTap: (){
+                            // open Settings Page Please
+                            _showSettingsDialog('history');
+                            print('Settings');
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: SvgPicture.asset(
+                              'assets/settings.svg',
+                              semanticsLabel: 'My SVG Image',
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: loadJsonDataList(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        List<Map<String, dynamic>> loadedList = snapshot.data as List<Map<String, dynamic>>;
-                        print("loadedList" + loadedList.toString());
-                        return Container(
-                          height: MediaQuery.of(context).size.height,
-                          child: ListView.builder(
-                            itemCount: loadedList.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == listItemCount) {
-                                // Display the banner ad after the third item
-                                return SizedBox(
-                                  height: double.parse(heightList),
-                                  width: double.parse(widthList),
-                                  child: AdWidget(ad: bannerAdForList),
-                                );
-                               }
-                              else if (index > listItemCount) {
-                                final itemIndex = index - 1;
-                                return loadedList.isNotEmpty ? Column(
-                                  children: [
-                                    GestureDetector(
-                                        onTap:(){
-                                          setState(() {
-                                            historyItemTapped = true;
-                                            NavigationService.count++;
-                                            if(NavigationService.getCount() == -1){
-                                              NavigationService.count = 0;
-                                            }
-                                            else if (NavigationService.getCount() == NavigationService.count) {
-                                              try {
-                                                loadInterstitialAd();
-                                              } catch (error) {}
-                                              interstitialAd?.show();
-                                              NavigationService.count = 0;
-                                            }
-                                          });
-                                          print("YASH" + loadedList[itemIndex].toString());
-                                          _showHistoryDialog(context, loadedList[itemIndex], loadedList[itemIndex]['type']);
-                                        },
-                                        child: Container(
-                                            height: 85,
-                                            width: double.infinity,
-                                            decoration:const BoxDecoration(
-                                                color: Color(0xffF4F4F4),
-                                                borderRadius: BorderRadius.all(Radius.circular(8))
-                                            ),
-                                            margin: const EdgeInsets.all(10),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Row(
-                                                  //mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                  children: [
-                                                    Container(
-                                                        margin: const EdgeInsets.only(left: 8,right: 8),
-                                                        color: Colors.white,
-                                                        child:  Padding(
-                                                          padding: EdgeInsets.all(8.0),
-                                                          child: SvgPicture.asset(
-                                                            'assets/qr_code.svg',
-                                                            semanticsLabel: 'My SVG Image',
-                                                          ),
-                                                        )),
-                                                    Padding(
-                                                      padding: const EdgeInsets.only(top:16,left: 5),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          loadedList[itemIndex]['type']=='WIFI'?Text(loadedList[itemIndex]['ssid']?? '' ):
-                                                          loadedList[itemIndex]['type']=='Calendar' ? Text(loadedList[itemIndex]['summary']??'') :
-                                                          loadedList[itemIndex]['type']=='Location'? Text('${loadedList[itemIndex]['latitude']??''} , ${loadedList[itemIndex]['longitude']?? ''}') :
-                                                          loadedList[itemIndex]['type']=='BarCode'? Text(loadedList[itemIndex]['BarCodeData']):
-                                                          loadedList[itemIndex]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[itemIndex]['Web Url'],overflow: TextOverflow.ellipsis,)):
-                                                          loadedList[itemIndex]['type']=='Contact'? Text(loadedList[itemIndex]['FN']):
-                                                          loadedList[itemIndex]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[itemIndex]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
-                                                          loadedList[itemIndex]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(top:8.0),
-                                                            child: Text(loadedList[itemIndex]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: TextStyle(color: Color(0xFFB2B0B0)),),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
+                      ],
+                    ),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: loadJsonDataList(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          List<Map<String, dynamic>> loadedList = snapshot.data!.reversed.toList();// as List<Map<String, dynamic>>;
+                          print("loadedList" + loadedList.toString());
+                          return Container(
+                            height: MediaQuery.of(context).size.height,
+                            child: ListView.builder(
+                                itemCount: loadedList.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == listItemCount) {
+                                    // Display the banner ad after the third item
+                                    return SizedBox(
+                                      height: double.parse(heightList),
+                                      width: double.parse(widthList),
+                                      child: AdWidget(ad: bannerAdForList),
+                                    );
+                                  }
+                                  else if (index > listItemCount) {
+                                    final itemIndex = index - 1;
+                                    return loadedList.isNotEmpty ? Column(
+                                      children: [
+                                        GestureDetector(
+                                            onTap:(){
+                                              setState(() {
+                                                historyItemTapped = true;
+                                                NavigationService.count++;
+                                                if(NavigationService.getCount() == -1){
+                                                  NavigationService.count = 0;
+                                                }
+                                                else if (NavigationService.getCount() == NavigationService.count) {
+                                                  try {
+                                                    loadInterstitialAd();
+                                                  } catch (error) {}
+                                                  interstitialAd?.show();
+                                                  NavigationService.count = 0;
+                                                }
+                                              });
+                                              print("YASH" + loadedList[itemIndex].toString());
+                                              _showHistoryDialog(context, loadedList[itemIndex], loadedList[itemIndex]['type']);
+                                            },
+                                            child: Container(
+                                                height: 85,
+                                                width: double.infinity,
+                                                decoration:const BoxDecoration(
+                                                    color: Color(0xffF4F4F4),
+                                                    borderRadius: BorderRadius.all(Radius.circular(8))
                                                 ),
-                                                Padding(
-                                                  padding: const EdgeInsets.all(8.0),
-                                                  child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
-                                                )
-                                              ],
-                                            )
-                                        )
-                                    ),
-                                    //for (Map<String, dynamic> item in loadedList)
-                                  ],
-                                )
-                                    : const Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    SizedBox(height: 300,),
-                                    Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
-                                  ],
-                                );
-                              }
-                              else {
-                                return loadedList.isNotEmpty ? Column(
-                                  children: [
-                                    GestureDetector(
-                                        onTap:(){
-                                          setState(() {
-                                            historyItemTapped = true;
-                                            NavigationService.count++;
-                                            if(NavigationService.getCount() == -1){
-                                              NavigationService.count = 0;
-                                            }
-                                            else if (NavigationService.getCount() == NavigationService.count) {
-                                              try {
-                                                loadInterstitialAd();
-                                              } catch (error) {}
-                                              interstitialAd?.show();
-                                              NavigationService.count = 0;
-                                            }
-                                          });
-                                          print("YASH" + loadedList[index].toString());
-                                          _showHistoryDialog(context, loadedList[index], loadedList[index]['type']);
-                                        },
-                                        child: Container(
-                                            height: 85,
-                                            width: double.infinity,
-                                            decoration:const BoxDecoration(
-                                                color: Color(0xffF4F4F4),
-                                                borderRadius: BorderRadius.all(Radius.circular(8))
-                                            ),
-                                            margin: const EdgeInsets.all(10),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Row(
-                                                  //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                margin: const EdgeInsets.all(10),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
-                                                    Container(
-                                                        margin: const EdgeInsets.only(left: 8,right: 8),
-                                                        color: Colors.white,
-                                                        child:  Padding(
-                                                          padding: EdgeInsets.all(8.0),
-                                                          child: SvgPicture.asset(
-                                                            'assets/qr_code.svg',
-                                                            semanticsLabel: 'My SVG Image',
+                                                    Row(
+                                                      //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                      children: [
+                                                        Container(
+                                                            margin: const EdgeInsets.only(left: 8,right: 8),
+                                                            color: Colors.white,
+                                                            child:  Padding(
+                                                              padding: const EdgeInsets.all(8.0),
+                                                              child: SvgPicture.asset(
+                                                                'assets/qr_code.svg',
+                                                                semanticsLabel: 'My SVG Image',
+                                                              ),
+                                                            )),
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top:16,left: 5),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              loadedList[itemIndex]['type']=='WIFI'?Text(loadedList[itemIndex]['ssid']?? '' ):
+                                                              loadedList[itemIndex]['type']=='Calendar' ? Text(loadedList[itemIndex]['summary']??'') :
+                                                              loadedList[itemIndex]['type']=='Location'? Text('${loadedList[itemIndex]['latitude']??''} , ${loadedList[itemIndex]['longitude']?? ''}') :
+                                                              loadedList[itemIndex]['type']=='BarCode'? Text(loadedList[itemIndex]['BarCodeData']):
+                                                              loadedList[itemIndex]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[itemIndex]['Web Url'],overflow: TextOverflow.ellipsis,)):
+                                                              loadedList[itemIndex]['type']=='Contact'? Text(loadedList[itemIndex]['FN']):
+                                                              loadedList[itemIndex]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[itemIndex]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
+                                                              loadedList[itemIndex]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
+                                                              Padding(
+                                                                padding: const EdgeInsets.only(top:8.0),
+                                                                child: Text(loadedList[itemIndex]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                              ),
+                                                            ],
                                                           ),
-                                                        )),
-                                                    Padding(
-                                                      padding: const EdgeInsets.only(top:16,left: 5),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          loadedList[index]['type']=='WIFI'?Text(loadedList[index]['ssid']?? '' ):
-                                                          loadedList[index]['type']=='Calendar' ? Text(loadedList[index]['summary']??'') :
-                                                          loadedList[index]['type']=='Location'? Text('${loadedList[index]['latitude']??''} , ${loadedList[index]['longitude']?? ''}') :
-                                                          loadedList[index]['type']=='BarCode'? Text(loadedList[index]['BarCodeData']):
-                                                          loadedList[index]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[index]['Web Url'],overflow: TextOverflow.ellipsis,)):
-                                                          loadedList[index]['type']=='Contact'? Text(loadedList[index]['FN']):
-                                                          loadedList[index]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[index]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
-                                                          loadedList[index]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(top:8.0),
-                                                            child: Text(loadedList[index]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: TextStyle(color: Color(0xFFB2B0B0)),),
-                                                          ),
-                                                        ],
-                                                      ),
+                                                        ),
+                                                      ],
                                                     ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Text(formatDateTime(DateTime.parse(loadedList[itemIndex]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                    )
                                                   ],
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsets.all(8.0),
-                                                  child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: TextStyle(color: Color(0xFFB2B0B0)),),
                                                 )
-                                              ],
                                             )
-                                        )
-                                    ),
-                                    //for (Map<String, dynamic> item in loadedList)
+                                        ),
+                                        //for (Map<String, dynamic> item in loadedList)
                                       ],
-                                )
-                                    : const Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    SizedBox(height: 300,),
-                                    Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
-                                  ],
-                                );
-                              }
-                                                }),
-                        );
-                      }
-                    },
-                  ),],
+                                    )
+                                        : const Column(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        SizedBox(height: 300,),
+                                        Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
+                                      ],
+                                    );
+                                  }
+                                  else {
+                                    return loadedList.isNotEmpty ? Column(
+                                      children: [
+                                        GestureDetector(
+                                            onTap:(){
+                                              setState(() {
+                                                historyItemTapped = true;
+                                                NavigationService.count++;
+                                                if(NavigationService.getCount() == -1){
+                                                  NavigationService.count = 0;
+                                                }
+                                                else if (NavigationService.getCount() == NavigationService.count) {
+                                                  try {
+                                                    loadInterstitialAd();
+                                                  } catch (error) {}
+                                                  interstitialAd?.show();
+                                                  NavigationService.count = 0;
+                                                }
+                                              });
+                                              print("YASH" + loadedList[index].toString());
+                                              _showHistoryDialog(context, loadedList[index], loadedList[index]['type']);
+                                            },
+                                            child: Container(
+                                                height: 85,
+                                                width: double.infinity,
+                                                decoration:const BoxDecoration(
+                                                    color: Color(0xffF4F4F4),
+                                                    borderRadius: BorderRadius.all(Radius.circular(8))
+                                                ),
+                                                margin: const EdgeInsets.all(10),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Row(
+                                                      //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                      children: [
+                                                        Container(
+                                                            margin: const EdgeInsets.only(left: 8,right: 8),
+                                                            color: Colors.white,
+                                                            child:  Padding(
+                                                              padding: const EdgeInsets.all(8.0),
+                                                              child: SvgPicture.asset(
+                                                                'assets/qr_code.svg',
+                                                                semanticsLabel: 'My SVG Image',
+                                                              ),
+                                                            )),
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top:16,left: 5),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              loadedList[index]['type']=='WIFI'?Text(loadedList[index]['ssid']?? '' ):
+                                                              loadedList[index]['type']=='Calendar' ? Text(loadedList[index]['summary']??'') :
+                                                              loadedList[index]['type']=='Location'? Text('${loadedList[index]['latitude']??''} , ${loadedList[index]['longitude']?? ''}') :
+                                                              loadedList[index]['type']=='BarCode'? Text(loadedList[index]['BarCodeData']):
+                                                              loadedList[index]['type']=='URL'? Container(constraints:BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2),child: Text(loadedList[index]['Web Url'],overflow: TextOverflow.ellipsis,)):
+                                                              loadedList[index]['type']=='Contact'? Text(loadedList[index]['FN']):
+                                                              loadedList[index]['type']=='upi'? Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 1/2), child: Text(loadedList[index]['URL'],overflow: TextOverflow.ellipsis,maxLines: 2,)):
+                                                              loadedList[index]['type']=='Undefined'? const Text('unknown') :const Text('Hi'),
+                                                              Padding(
+                                                                padding: const EdgeInsets.only(top:8.0),
+                                                                child: Text(loadedList[index]['type'] ?? 'Text',overflow:TextOverflow.ellipsis,style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Text(formatDateTime(DateTime.parse(loadedList[index]['scannedTime'])),style: const TextStyle(color: Color(0xFFB2B0B0)),),
+                                                    )
+                                                  ],
+                                                )
+                                            )
+                                        ),
+                                        //for (Map<String, dynamic> item in loadedList)
+                                      ],
+                                    )
+                                        : const Column(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        SizedBox(height: 300,),
+                                        Text('No History', style: TextStyle(fontSize: 20, color: Colors.black),),
+                                      ],
+                                    );
+                                  }
+                                }),
+                          );
+                        }
+                      },
+                    ),],
+                ),
               ),
+                /*Align(
+                  alignment:  Alignment.bottomCenter,
+                  child: Container(
+                    //alignment: Alignment.topCenter,
+                    color: Colors.green,
+                    width:320,
+                    height: 50,
+                  ),
+                ),*/
+              ]
+              ,
             ),
           ),
         );
@@ -1599,7 +1620,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top: 8.0),
+                          margin: const EdgeInsets.only(top: 8.0),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1780,7 +1801,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         child: Align(
                             alignment: Alignment.center,
                             child: Container(
-                              margin: EdgeInsets.only(top:5),
+                              margin: const EdgeInsets.only(top:5),
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -1920,7 +1941,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top: 5),
+                          margin: const EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -2034,7 +2055,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top: 5),
+                          margin: const EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -2209,7 +2230,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top: 5),
+                          margin: const EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -2513,6 +2534,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           Expanded(
                             flex: 1,
                             child: Container(
+                              height: 50,
                               decoration: BoxDecoration(
                                 color:  const Color(0xff1976D2),
                                 borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
@@ -2523,7 +2545,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                       backgroundColor: Colors.transparent,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0)
-                                    )
+                                    ),
+                                    fixedSize: const Size.fromHeight(50),
                                   ),
                                   onPressed:() {
                                     openPaymentURL(jsonResult['URL']);
@@ -2533,19 +2556,27 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           const SizedBox(width: 10,),
                           Expanded(
                             flex: 1,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color:  const Color(0xff71717A),
-                                borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                            child: Material(
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color:  const Color(0xff71717A),
+                                  borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
+                                ),
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 0,
+                                        backgroundColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8.0)
+                                        ),
+                                      fixedSize: const Size.fromHeight(50),
+
+                                    ),
+                                    onPressed:() {
+                                      copyToClipboard(jsonResult['URL']);
+                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                               ),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0,
-                                      backgroundColor: Colors.transparent
-                                  ),
-                                  onPressed:() {
-                                    copyToClipboard(jsonResult['URL']);
-                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                             ),
                           ),
                         ],
@@ -2559,6 +2590,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         flex: 1,
                         child: Container(
                           width: double.infinity,
+                          height: 50,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
@@ -2567,13 +2599,19 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                               width: 2.0, // Set border width
                             ),
                           ),
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  elevation: 0
-                              ),
-                              onPressed:() {
-                                callIntentText(jsonResult['URL'], jsonResult['type']);
-                              }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          child: Expanded(
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0)
+                                    ),
+                                  fixedSize: const Size.fromHeight(50),
+                                ),
+                                onPressed:() {
+                                  callIntentText(jsonResult['URL'], jsonResult['type']);
+                                }, child: const Text('Share',style: TextStyle(color: Colors.black),)),
+                          ),
                         )),
                   )
                 ],
@@ -2661,7 +2699,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top: 5),
+                          margin: const EdgeInsets.only(top: 5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -2847,7 +2885,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
-                        margin: EdgeInsets.only(top:5),
+                        margin: const EdgeInsets.only(top:5),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -3034,7 +3072,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                       child: Align(
                           alignment: Alignment.center,
                           child: Container(
-                            margin: EdgeInsets.only(top: 5),
+                            margin: const EdgeInsets.only(top: 5),
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -3176,7 +3214,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
-                        margin:EdgeInsets.only(top:5.0),
+                        margin:const EdgeInsets.only(top:5.0),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -3291,7 +3329,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                   child: Flexible(
                       flex: 1,
                       child: Container(
-                        margin: EdgeInsets.only(top:5),
+                        margin: const EdgeInsets.only(top:5),
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -3472,7 +3510,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                     child: Flexible(
                         flex: 1,
                         child: Container(
-                          margin: EdgeInsets.only(top:5),
+                          margin: const EdgeInsets.only(top:5),
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -3771,46 +3809,46 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           Expanded(
                             flex: 1,
                             child: Container(
+                              height: 50,
                               decoration: BoxDecoration(
                                 color:  const Color(0xff1976D2),
                                 borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                               ),
-                              child: SizedBox.expand(
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        elevation: 0,
-                                        backgroundColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8.0)
-                                      )
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      elevation: 0,
+                                      backgroundColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)
                                     ),
-                                    onPressed:() {
-                                      openPaymentURL(url['URL']);
-                                    }, child: const Text('Pay',style: TextStyle(color: Colors.white),)),
-                              ),
+                                    fixedSize: const Size.fromHeight(50),
+                                  ),
+                                  onPressed:() {
+                                    openPaymentURL(url['URL']);
+                                  }, child: const Text('Pay',style: TextStyle(color: Colors.white),)),
                             ),
                           ),
                           const SizedBox(width: 10,),
                           Expanded(
                             flex: 1,
                             child: Container(
+                              height: 50,
                               decoration: BoxDecoration(
                                 color:  const Color(0xff71717A),
                                 borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
                               ),
-                              child: SizedBox.expand(
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        elevation: 0,
-                                        backgroundColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8)
-                                      )
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      elevation: 0,
+                                      backgroundColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)
                                     ),
-                                    onPressed:() {
-                                      copyToClipboard(url['URL']);
-                                    }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
-                              ),
+                                    fixedSize: const Size.fromHeight(50),
+                                  ),
+                                  onPressed:() {
+                                    copyToClipboard(url['URL']);
+                                  }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                             ),
                           ),
                         ],
@@ -3824,6 +3862,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                         flex: 1,
                         child: Container(
                           width: double.infinity,
+                          height: 50,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8.0), // Set border radius for a rectangular shape
@@ -3838,7 +3877,8 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                     elevation: 0,
                                     shape:RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0)
-                                    )
+                                    ),
+                                  fixedSize: const Size.fromHeight(50),
                                 ),
                                 onPressed:() {
                                   callIntentText(url['URL'], url['type']);
@@ -3886,7 +3926,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             });
                             Navigator.of(context).pop();
                           },
-                          child: Icon(Icons.close)
+                          child: const Icon(Icons.close)
                       ),
                     ],
                   ),
@@ -3923,7 +3963,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                             }, child: const Text('Copy',style: TextStyle(color: Colors.white),)),
                       ),
                     ),),
-                SizedBox(height: 10,),
+                const SizedBox(height: 10,),
                 Expanded(
                   flex: 1,
                   child:
@@ -4067,7 +4107,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     };
     channelShare.invokeMethod("SHARE", map);
   }
-
 
   callIntentBarCode(String barcode, String type) {
     Map map = {
@@ -4433,6 +4472,8 @@ void loadSettingsBannerAd() {
                             ),
                             onPressed: () {
                               prefs.clear();
+                              Navigator.pop(context);
+                              Navigator.of(context).pop();
                               Fluttertoast.showToast(
                                 msg:
                                 "History Cleared.",
@@ -4757,7 +4798,7 @@ class MyCustomButton extends StatelessWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(8.0), // Adjust as per your requirement
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
           child: child,
         ),
       ),
