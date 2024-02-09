@@ -1,14 +1,13 @@
 {
   "project_info": {
-    "project_number": "633767644899",
-    "firebase_url": "https://qrscanner-d1350-default-rtdb.firebaseio.com",
-    "project_id": "qrscanner-d1350",
-    "storage_bucket": "qrscanner-d1350.appspot.com"
+    "project_number": "441740292292",
+    "project_id": "qr-scanner-c809a",
+    "storage_bucket": "qr-scanner-c809a.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:633767644899:android:9837016d1c58c4a38d3fd6",
+        "mobilesdk_app_id": "1:441740292292:android:e4bbac589504b2e0839991",
         "android_client_info": {
           "package_name": "com.efficiencyhive.qrscanner"
         }
@@ -16,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCVsl4DzuTXfQ7Fbae0eFfioC-GET4t2IQ"
+          "current_key": "AIzaSyAFaLJQMWfa9E24JK0w1DNUKYcUQ8P_jXY"
         }
       ],
       "services": {

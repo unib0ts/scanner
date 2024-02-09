@@ -41,7 +41,7 @@ class NavigationService {
       case "largeBanner":
         return AdSize.largeBanner;
       case "mediumRectangle":
-        return AdSize.mediumRectangle;
+        return const AdSize(width: 280, height: 250);
       case "fullBanner":
         return AdSize.fullBanner;
       case "leaderboard":

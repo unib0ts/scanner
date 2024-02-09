@@ -319,7 +319,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
   }
 
   Future<void> addJsonDataToList(Map<String, dynamic> newData) async {
-    print('scanHistory'+jsonDataList.toString());
     final updatedList = List<Map<String, dynamic>>.from(jsonDataList);
 
     updatedList.add(newData);
@@ -362,7 +361,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         .onValue
         .listen((event) {
       final isAd = event.snapshot.value;
-      print("IS_AD" + isAd.toString());
       setState(() {
         isAdShow = bool.parse(isAd.toString());
       });
@@ -492,7 +490,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       });
     });
     /* History Screen */
-    NavigationService.databaseReference
+/*    NavigationService.databaseReference
         .child('list_item_position')
         .onValue
         .listen((event) {
@@ -527,7 +525,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         }
         loadBottomBannerAdList();
       });
-    });
+    });*/
     /* History Bottom */
     NavigationService.databaseReference
         .child('history_bottom_dialog_positions')
@@ -978,7 +976,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           onTap: (){
                             // open Settings Page Please
                             _showSettingsDialog('history');
-                            print('Settings');
                           },
                           child: Padding(
                             padding: const EdgeInsets.only(right: 8),
@@ -999,7 +996,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                           return Text('Error: ${snapshot.error}');
                         } else {
                           List<Map<String, dynamic>> loadedList = snapshot.data!.reversed.toList();// as List<Map<String, dynamic>>;
-                          print("loadedList" + loadedList.toString());
                           return Container(
                             height: MediaQuery.of(context).size.height,
                             child: ListView.builder(
@@ -1025,7 +1021,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                                 NavigationService.count = 0;
                                               }
                                             });
-                                            print("YASH" + loadedList[index].toString());
                                             _showHistoryDialog(context, loadedList[index], loadedList[index]['type']);
                                           },
                                           child: Container(
@@ -1285,8 +1280,7 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
               ),
                 Align(
                   alignment:  Alignment.bottomCenter,
-                  child: true ? true ? Container(
-                    color: Colors.green,
+                  child: isAdShow ? adPositionHistoryBottom ? Container(
                     height: double.parse(heightHistoryBottom),
                     width: double.parse(widthHistoryBottom),
                     child: AdWidget(ad: bannerAdForHistoryBottom),
@@ -1368,7 +1362,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
 
       }
-      print("aditya${scanData.code!} type ${scanData.format}");
     });
   }
 
@@ -1387,7 +1380,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       if (parts.length == 2) {
         String key = parts[0].trim();
         String value = parts[1].trim();
-        print("jsonResult" + jsonResult.toString());
         // Handle specific cases, you may need to customize this based on your needs
         if (key == 'N') {
           // Split the name into parts
@@ -1415,8 +1407,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       });
       jsonResult['scannedTime'] = DateTime.now().toString();
     }
-    print(jsonResult);
-
     return jsonResult;
   }
 
@@ -1458,7 +1448,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         jsonResult['queryParams'] = queryParams;
       }
     }
-    print('jsonResult1'+jsonResult.toString());
 
     return jsonResult;
   }
@@ -1591,24 +1580,22 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         isConnected = await WiFiForIoTPlugin.isConnected();
 
         if (isConnected) {
-          print("Connected to $ssid");
+          // print("Connected to $ssid");
         } else {
-          print("Failed to connect to $ssid");
+          // print("Failed to connect to $ssid");
         }
       } else {
         print("Already connected to a Wi-Fi network");
       }
 
-      print("Is connected to Wi-Fi: $isConnected");
+      //print("Is connected to Wi-Fi: $isConnected");
     } catch (e) {
-      print("Error: $e");
+      //print("Error: $e");
     }
   }
 
   void _showDialog(BuildContext context,String url,String type) async {
 
-
-    print('url'+url);
     Map<String, dynamic> jsonResult;
     if(type == 'VCARD'){
       jsonResult= vCardToJSON(url);
@@ -1656,8 +1643,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
         jsonResult['scannedTime'] = DateTime.now().toString();
       }
     }
-    print("TYPE: $type");
-    print('jsonResult'+jsonResult.toString());
 
 
     showDialog(
@@ -1913,7 +1898,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                       )
                                       ),
                                       onPressed: () async {
-                                        print("object" + jsonResult['ssid']);
                                         // await PluginWifiConnect. ;
                                         /*WiFiForIoTPlugin.connect(jsonResult['ssid'],
                                     password: jsonResult['password'],
@@ -2910,7 +2894,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
 
   void _showSettingsDialog(String history){
 
-    print('show dialog');
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -3182,7 +3165,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
                                         )
                                     ),
                                     onPressed: () async {
-                                      print("object" + url['ssid']);
                                       // await PluginWifiConnect. ;
                                       /*  WiFiForIoTPlugin.connect(jsonResult['ssid'],
                                     password: jsonResult['password'],
@@ -4240,7 +4222,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
       "email": email,
       "name": name,
     };
-    print("Contacts" + map.toString());
     channelContacts.invokeMethod("ADD_CONTACTS", map);
   }
 
@@ -4343,8 +4324,6 @@ class _QRViewExampleState extends State<QRViewExample> with SingleTickerProvider
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
-      print(await canLaunchUrl(Uri.parse(url)));
-      print('Could not launch $url');
     }
   }
 
@@ -4382,7 +4361,7 @@ class _SettingsAlertState extends State<SettingsAlert> {
   bool isSwitchedOpenURL = false;
   late AdManagerBannerAd bannerAdForSettings;
   var heightSettings = "250",
-      widthSettings = "300";
+      widthSettings = "280";
   bool isAdShow = false;
   bool adPositionSettings = false;
   var adUnitSettings = "";
@@ -4409,7 +4388,6 @@ class _SettingsAlertState extends State<SettingsAlert> {
         .onValue
         .listen((event) {
       final isAd = event.snapshot.value;
-      print("IS_AD1" + isAd.toString());
       setState(() {
         isAdShow = bool.parse(isAd.toString());
       });
@@ -4639,9 +4617,13 @@ void loadSettingsBannerAd() {
                               backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFFFEE2E2)),
                             ),
                             onPressed: () {
-                              prefs.clear();
-                              Navigator.pop(context);
+                              prefs.remove('scanHistory');
+
+
+
                               Navigator.of(context).pop();
+
+                              widget.type == 'history'?Navigator.pop(context):(){};
                               Fluttertoast.showToast(
                                 msg:
                                 "History Cleared.",
@@ -4684,7 +4666,7 @@ void loadSettingsBannerAd() {
                 ),
               ),
             ),*/
-            Expanded(
+            /*Expanded(
               flex: 1,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -4704,7 +4686,7 @@ void loadSettingsBannerAd() {
                       child: const Text('More Apps Like This',style: TextStyle(color: Color(0xFF1976D2)),)),
                 ),
               ),
-            ),
+            ),*/
             /* Expanded(
               flex: 1,
               child: Padding(
